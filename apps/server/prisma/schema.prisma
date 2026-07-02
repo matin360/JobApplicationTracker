@@ -14,19 +14,27 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  companies   Company[]
   applications Application[]
-  resumes      ResumeVersion[]
+  resumes     ResumeVersion[]
+
+  @@index([email])
 }
 
 model Company {
   id        String   @id @default(cuid())
+  userId    String
   name      String
   website   String?
   location  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   applications Application[]
+
+  @@index([userId])
+  @@index([name])
 }
 
 model Application {
@@ -36,7 +44,7 @@ model Application {
   roleTitle       String
   location        String?
   source          String?
-  status          String   @default("draft")
+  status          String   @default("saved")
   appliedAt       DateTime?
   jobUrl          String?
   salaryRange     String?
@@ -45,12 +53,17 @@ model Application {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  user            User      @relation(fields: [userId], references: [id])
-  company         Company?  @relation(fields: [companyId], references: [id])
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company         Company?    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   notes           Note[]
   reminders       Reminder[]
   interviews      Interview[]
-  resumeVersions  ResumeVersion[]
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([status])
+  @@index([appliedAt])
+  @@index([nextFollowUpAt])
 }
 
 model Note {
@@ -60,7 +73,9 @@ model Note {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
-  application   Application @relation(fields: [applicationId], references: [id])
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
 }
 
 model Reminder {
@@ -72,20 +87,24 @@ model Reminder {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
-  application   Application @relation(fields: [applicationId], references: [id])
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([dueAt])
 }
 
 model ResumeVersion {
-  id            String      @id @default(cuid())
-  userId        String
-  label         String
-  fileUrl       String?
-  filePath      String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id        String   @id @default(cuid())
+  userId    String
+  label     String
+  fileUrl   String?
+  filePath  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user          User        @relation(fields: [userId], references: [id])
-  applications  Application[]
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Interview {
@@ -97,5 +116,8 @@ model Interview {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
-  application   Application @relation(fields: [applicationId], references: [id])
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+  @@index([scheduledAt])
 }
