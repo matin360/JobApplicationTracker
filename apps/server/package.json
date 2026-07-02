@@ -1,0 +1,24 @@
+{
+  "name": "@job-application-tracker/server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.10.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.3",
+    "express": "^4.21.1",
+    "prisma": "^5.10.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.5",
+    "@types/express": "^5.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.3"
+  }
+}
