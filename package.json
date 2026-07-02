@@ -11,6 +11,15 @@
     "dev:server": "npm run dev --workspace apps/server",
     "build": "npm run build --workspace apps/client && npm run build --workspace apps/server",
     "start": "npm run start --workspace apps/server",
+    "lint": "npm run lint --workspace apps/client && npm run lint --workspace apps/server",
     "test": "echo \"No tests yet\""
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "eslint": "^9.15.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.0",
+    "globals": "^15.8.0",
+    "typescript-eslint": "^8.15.0"
   }
 }
