@@ -22,5 +22,11 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }]
     }
+  },
+  {
+    files: ['vite.config.ts', 'vite.config.js'],
+    languageOptions: {
+      globals: globals.node
+    }
   }
 );
