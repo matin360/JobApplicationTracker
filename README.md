@@ -4,6 +4,22 @@ This repository contains a monorepo for the Job Application Tracker MVP with a R
 
 ## Quick start
 
+Run the setup script from the repo root. It installs dependencies, creates local `.env` files, starts Postgres (via Docker, if available), and applies migrations + seed data - skipping any step that's already done, so it's safe to re-run:
+
+```bash
+./scripts/setup.sh
+```
+
+Then start the app:
+
+```bash
+npm run dev:server   # API on http://localhost:4000
+npm run dev          # frontend on http://localhost:3000
+```
+
+<details>
+<summary>Manual setup (if you'd rather not use the script)</summary>
+
 1. Install dependencies from the repo root:
    ```bash
    npm install
@@ -13,16 +29,16 @@ This repository contains a monorepo for the Job Application Tracker MVP with a R
    cp apps/client/.env.example apps/client/.env
    cp apps/server/.env.example apps/server/.env
    ```
-3. Start the API server:
+3. Make sure Postgres is running and reachable at the `DATABASE_URL` in `apps/server/.env` (e.g. `docker compose up -d db`), then apply migrations and seed data - see [Database setup](#database-setup).
+4. Start the API server:
    ```bash
    npm run dev:server
    ```
-4. Start the frontend:
+5. Start the frontend:
    ```bash
    npm run dev
    ```
-
-The frontend runs on port `3000` and the backend runs on port `4000` by default.
+</details>
 
 ## Running with Docker
 
@@ -56,6 +72,8 @@ npm run db:seed
 
 This applies the Prisma migration and seeds the database with sample data.
 
+`./scripts/setup.sh` does this automatically the first time it's run. It only seeds once (marked by a `.setup-complete` file at the repo root, since seeding wipes existing rows) - delete that file to force a reseed on the next run.
+
 ## Environment variables
 
 - Frontend: `apps/client/.env` can optionally define `VITE_API_URL` and `VITE_PORT`. If `VITE_API_URL` is unset, the client calls the API via relative `/api/...` paths, which the Vite dev server proxies to `http://localhost:4000` (or `VITE_API_URL`, if set, as the proxy target).
@@ -63,10 +81,11 @@ This applies the Prisma migration and seeds the database with sample data.
 
 ## Development checks
 
-Run the server tests:
+Run the server and client tests:
 
 ```bash
 npm test --workspace apps/server
+npm test --workspace apps/client
 ```
 
 Run linting and builds:
