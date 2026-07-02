@@ -9,8 +9,6 @@ vi.mock('../src/hooks/useAuth', () => ({
 }));
 
 describe('ProtectedRoute', () => {
-  const originalLocation = window.location;
-
   beforeEach(() => {
     Object.defineProperty(window, 'location', {
       configurable: true,
