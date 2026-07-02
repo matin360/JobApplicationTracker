@@ -24,6 +24,16 @@ This repository contains a monorepo for the Job Application Tracker MVP with a R
 
 The frontend runs on port `3000` and the backend runs on port `4000` by default.
 
+## Running with Docker
+
+Alternatively, run the whole stack (client, server, and a Postgres database) with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+This builds the client and server images and starts Postgres. The frontend is served at `http://localhost:3000` and the API at `http://localhost:4000`. The server container's `VITE_API_URL`/`DATABASE_URL` are set directly in `docker-compose.yml`, so no `.env` files are required for this path.
+
 ## Auth flow
 
 The app uses cookie-based sessions for authentication.
@@ -48,12 +58,26 @@ This applies the Prisma migration and seeds the database with sample data.
 
 ## Environment variables
 
-- Frontend: `apps/client/.env` should define `VITE_API_URL` and `VITE_PORT`.
+- Frontend: `apps/client/.env` can optionally define `VITE_API_URL` and `VITE_PORT`. If `VITE_API_URL` is unset, the client calls the API via relative `/api/...` paths, which the Vite dev server proxies to `http://localhost:4000` (or `VITE_API_URL`, if set, as the proxy target).
 - Backend: `apps/server/.env` should define `PORT` and `DATABASE_URL`.
 
 ## Development checks
+
+Run the server tests:
+
+```bash
+npm test --workspace apps/server
+```
+
+Run linting and builds:
 
 ```bash
 npm run lint
 npm run build
 ```
+
+## Frontend auth setup
+
+By default the client calls the API via relative paths (`/api/...`), proxied to the backend by Vite during local development; set `VITE_API_URL` to call the API at an absolute URL instead (this is how the Docker Compose setup connects the two containers). If the backend is not running, the auth check will simply fall back to the logged-out state instead of hanging in a loading loop.
+
+Session cookies use `SameSite=Lax` outside of production, since the client and API are both served from `localhost` (just different ports), which counts as same-site. In production, where the client and API are expected to live on different domains behind HTTPS, cookies use `SameSite=None; Secure` instead.

@@ -1,0 +1,43 @@
+import { describe, expect, it, vi } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import useAuth from '../src/hooks/useAuth';
+import * as auth from '../src/auth';
+
+vi.mock('../src/auth', () => ({
+  getCurrentUser: vi.fn()
+}));
+
+describe('useAuth', () => {
+  const TestComponent = () => {
+    const { user, loading, authenticated } = useAuth();
+
+    return (
+      <div>
+        <span>{loading ? 'loading' : 'loaded'}</span>
+        <span>{user?.email ?? 'null'}</span>
+        <span>{authenticated ? 'yes' : 'no'}</span>
+      </div>
+    );
+  };
+
+  it('returns an authenticated user when getCurrentUser resolves', async () => {
+    const fakeUser = { id: '1', email: 'user@example.com', name: 'User' };
+    (auth.getCurrentUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(fakeUser);
+
+    render(<TestComponent />);
+
+    await waitFor(() => expect(screen.getByText(/user@example.com/i)).toBeInTheDocument());
+    expect(screen.getByText(/loaded/i)).toBeInTheDocument();
+    expect(screen.getByText(/yes/i)).toBeInTheDocument();
+  });
+
+  it('returns unauthenticated when getCurrentUser returns null', async () => {
+    (auth.getCurrentUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+
+    render(<TestComponent />);
+
+    await waitFor(() => expect(screen.getByText(/null/i)).toBeInTheDocument());
+    expect(screen.getByText(/loaded/i)).toBeInTheDocument();
+    expect(screen.getByText(/no/i)).toBeInTheDocument();
+  });
+});
