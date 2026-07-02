@@ -15,6 +15,7 @@ const useAuth = () => {
   useEffect(() => {
     let isMounted = true;
 
+    // Load the current authenticated user once when the hook mounts.
     const loadUser = async () => {
       const currentUser = await getCurrentUser();
       if (!isMounted) {
@@ -35,6 +36,7 @@ const useAuth = () => {
   return {
     user,
     loading,
+    // Derive authenticated state from whether a user object exists.
     authenticated: Boolean(user)
   } satisfies AuthStatus;
 };

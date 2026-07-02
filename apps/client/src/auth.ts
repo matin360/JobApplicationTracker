@@ -16,24 +16,43 @@ export interface AuthResponse {
   };
 }
 
-const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+// When VITE_API_URL is defined, use it; otherwise rely on a relative path.
+// Relative paths let Vite proxy backend requests during local development.
+const apiBaseUrl = import.meta.env.VITE_API_URL ?? '';
 
+function buildApiUrl(path: string) {
+  return apiBaseUrl ? `${apiBaseUrl}${path}` : path;
+}
+
+// Returns the currently signed-in user or null if not authenticated.
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  const response = await fetch(`${apiBaseUrl}/api/auth/me`, {
-    method: 'GET',
-    credentials: 'include'
-  });
+  try {
+    const response = await fetch(buildApiUrl('/api/auth/me'), {
+      method: 'GET',
+      credentials: 'include'
+    });
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as { user?: AuthUser | null };
+    return payload.user ?? null;
+  } catch {
     return null;
   }
+}
 
-  const payload = (await response.json()) as { user?: AuthUser | null };
-  return payload.user ?? null;
+async function parseAuthResponse(response: Response): Promise<AuthResponse | { error?: string } | null> {
+  try {
+    return (await response.json()) as AuthResponse | { error?: string };
+  } catch {
+    return null;
+  }
 }
 
 export async function signIn(payload: { email: string; password: string }): Promise<AuthResponse> {
-  const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+  const response = await fetch(buildApiUrl('/api/auth/login'), {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -42,18 +61,21 @@ export async function signIn(payload: { email: string; password: string }): Prom
     body: JSON.stringify(payload)
   });
 
-  const data = (await response.json()) as AuthResponse | { error?: string };
+  const data = await parseAuthResponse(response);
 
-  if (!response.ok || !('user' in data) || !('session' in data)) {
-    const errorMessage = 'error' in data && typeof data.error === 'string' ? data.error : 'Unable to sign in.';
+  if (!response.ok || !data || !('user' in data) || !('session' in data)) {
+    const errorMessage = data && 'error' in data && typeof data.error === 'string'
+      ? data.error
+      : `Unable to sign in. (${response.status} ${response.statusText})`;
     throw new Error(errorMessage);
   }
 
   return data;
 }
 
+// Create a new account and establish an authenticated session.
 export async function signUp(payload: { email: string; password: string; name?: string }): Promise<AuthResponse> {
-  const response = await fetch(`${apiBaseUrl}/api/auth/signup`, {
+  const response = await fetch(buildApiUrl('/api/auth/signup'), {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -72,8 +94,9 @@ export async function signUp(payload: { email: string; password: string; name?: 
   return data;
 }
 
+// Log the user out by clearing the server-side session and cookie.
 export async function signOut(): Promise<void> {
-  await fetch(`${apiBaseUrl}/api/auth/logout`, {
+  await fetch(buildApiUrl('/api/auth/logout'), {
     method: 'POST',
     credentials: 'include'
   });

@@ -8,9 +8,11 @@ interface AuthenticatedRequest extends Request {
   user?: AuthUser;
 }
 
+// Prisma client for database access and crypto utilities for password hashing.
 const prisma = new PrismaClient();
 const scrypt = promisify(scryptCallback);
 
+// Session lifetime and cookie configuration.
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 const COOKIE_NAME = 'sessionToken';
 
@@ -81,19 +83,29 @@ function getCookieValue(request: Request, name: string): string | null {
   return null;
 }
 
+// In production the client and API are expected to live on different domains, so the
+// cookie needs SameSite=None (which browsers only accept alongside Secure, i.e. HTTPS).
+// In dev, client and server are both on `localhost` (just different ports) - same-site
+// for cookie purposes - so SameSite=Lax works and avoids the Secure/HTTPS requirement.
+function sessionCookieAttributes(): string {
+  const isSecure = config.nodeEnv === 'production';
+  return isSecure ? 'SameSite=None; Secure' : 'SameSite=Lax';
+}
+
+// Store the session token as an HttpOnly cookie so it is sent with future requests.
 function setSessionCookie(response: Response, token: string): void {
-  const isSecure = config.nodeEnv === 'production';
   const maxAge = Math.floor(SESSION_TTL_MS / 1000);
-  const cookieValue = `sessionToken=${token}; HttpOnly; Path=/; Max-Age=${maxAge}; SameSite=Lax${isSecure ? '; Secure' : ''}`;
+  const cookieValue = `sessionToken=${token}; HttpOnly; Path=/; Max-Age=${maxAge}; ${sessionCookieAttributes()}`;
   response.setHeader('Set-Cookie', cookieValue);
 }
 
+// Clear the session cookie when logging out or when the session is invalid.
 function clearSessionCookie(response: Response): void {
-  const isSecure = config.nodeEnv === 'production';
-  const cookieValue = `sessionToken=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax${isSecure ? '; Secure' : ''}`;
+  const cookieValue = `sessionToken=; HttpOnly; Path=/; Max-Age=0; ${sessionCookieAttributes()}`;
   response.setHeader('Set-Cookie', cookieValue);
 }
 
+// Create a refreshable session record and return its token.
 async function createSession(userId: string): Promise<{ token: string; expiresAt: Date }> {
   const token = createSessionToken();
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
@@ -109,6 +121,7 @@ async function createSession(userId: string): Promise<{ token: string; expiresAt
   return { token, expiresAt };
 }
 
+// Load the user associated with a valid session token.
 async function findUserBySessionToken(token: string): Promise<AuthUser | null> {
   const session = await prisma.session.findUnique({
     where: { token },
@@ -130,6 +143,7 @@ async function findUserBySessionToken(token: string): Promise<AuthUser | null> {
   };
 }
 
+// Middleware that checks the session cookie and attaches the authenticated user to the request.
 export async function bootstrapAuth(request: AuthenticatedRequest, _response: Response, next: NextFunction): Promise<void> {
   const token = getCookieValue(request, COOKIE_NAME);
 
@@ -156,6 +170,7 @@ export function getAuthenticatedUser(request: AuthenticatedRequest): AuthUser | 
   return request.user;
 }
 
+// Protect routes that require a valid authenticated session.
 export async function requireAuth(request: AuthenticatedRequest, response: Response, next: NextFunction): Promise<void> {
   await bootstrapAuth(request, response, next);
 
@@ -167,6 +182,7 @@ export async function requireAuth(request: AuthenticatedRequest, response: Respo
   next();
 }
 
+// Create a new user account, hash the password, create a session, and send back the authenticated user.
 export async function signup(request: Request, response: Response): Promise<void> {
   const rawEmail = typeof request.body?.email === 'string' ? request.body.email : '';
   const rawPassword = typeof request.body?.password === 'string' ? request.body.password : '';
@@ -226,6 +242,7 @@ export async function signup(request: Request, response: Response): Promise<void
   });
 }
 
+// Validate credentials, create a new session, and return the authenticated user.
 export async function login(request: Request, response: Response): Promise<void> {
   const email = normalizeEmail(String(request.body?.email ?? '').trim());
   const password = String(request.body?.password ?? '');
@@ -262,6 +279,7 @@ export async function login(request: Request, response: Response): Promise<void>
   });
 }
 
+// Remove the current session and clear the session cookie.
 export async function logout(request: Request, response: Response): Promise<void> {
   const token = getCookieValue(request, COOKIE_NAME);
 
@@ -273,6 +291,7 @@ export async function logout(request: Request, response: Response): Promise<void
   response.status(200).json({ success: true });
 }
 
+// Return the authenticated user's public profile data.
 export async function me(request: AuthenticatedRequest, response: Response): Promise<void> {
   const user = getAuthenticatedUser(request);
 
