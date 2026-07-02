@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { hashPassword } from '../src/auth';
 
 const prisma = new PrismaClient();
 
@@ -13,10 +14,12 @@ async function main() {
   await prisma.user.deleteMany();
 
   // Create a test user
+  const passwordHash = await hashPassword('password123');
   const user = await prisma.user.create({
     data: {
       email: 'john@example.com',
       name: 'John Doe',
+      passwordHash,
     },
   });
 
