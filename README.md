@@ -1,19 +1,17 @@
 # Job Application Tracker
 
-This repository contains a starter monorepo for the Job Application Tracker product described in the docs.
+This repository contains a monorepo for the Job Application Tracker MVP.
+It includes:
 
-## What is included
-
-- A React + TypeScript frontend in apps/client
-- A Node.js + Express backend in apps/server
-- A Prisma schema for the MVP data model
+- A React + TypeScript frontend in `apps/client`
+- A Node.js + Express backend in `apps/server`
+- A PostgreSQL database schema managed by Prisma
 - ESLint configuration for both apps
-- Path aliases for the frontend and environment-based configuration
-- A documentation folder with the product and MVP scope
+- A docs folder with product and MVP scope details
 
 ## Quick start
 
-1. Install dependencies:
+1. Install dependencies from the repo root:
    ```bash
    npm install
    ```
@@ -26,16 +24,29 @@ This repository contains a starter monorepo for the Job Application Tracker prod
    ```bash
    npm run dev
    ```
-4. Start the API:
+4. Start the API server:
    ```bash
    npm run dev:server
    ```
 
-The frontend runs on port 3000 and the API runs on port 4000 by default.
+The frontend runs on port `3000` and the backend runs on port `4000` by default.
+
+## Backend database setup
+
+The backend uses Prisma with PostgreSQL.
+
+From `apps/server` you can run:
+
+```bash
+npm run db:migrate
+npm run db:seed
+```
+
+This will apply the Prisma migration and seed the database with sample data.
 
 ## Linting
 
-Run the linter across both apps:
+Run the linter across both workspaces:
 
 ```bash
 npm run lint
@@ -43,18 +54,24 @@ npm run lint
 
 ## Docker
 
-You can also run the app in containers with Docker Compose:
+Run the full stack with Docker Compose:
 
 ```bash
 docker compose up --build
 ```
 
 This starts:
-- the frontend on http://localhost:3000
-- the backend on http://localhost:4000
-- a PostgreSQL database on localhost:5432
+- frontend on `http://localhost:3000`
+- backend on `http://localhost:4000`
+- PostgreSQL on `localhost:5432`
 
 ## Environment variables
 
-- Frontend: create a client environment file and set VITE_API_URL and VITE_PORT as needed.
-- Backend: set PORT and DATABASE_URL in the server environment file.
+- Frontend: `apps/client/.env` should contain `VITE_API_URL` and `VITE_PORT`.
+- Backend: `apps/server/.env` should contain `PORT` and `DATABASE_URL`.
+
+## Notes
+
+- The current Prisma schema lives in `apps/server/prisma/schema.prisma`.
+- Seed data is defined in `apps/server/prisma/seed.ts`.
+- The database migration folder is `apps/server/prisma/migrations`.
