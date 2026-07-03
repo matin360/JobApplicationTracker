@@ -15,6 +15,9 @@ const App = () => {
     setSigningOut(true);
     try {
       await signOut();
+    } catch {
+      // Even if the logout request fails, fall through to the login page;
+      // the session cookie is HttpOnly so the server remains the source of truth.
     } finally {
       window.location.assign('/login');
     }
