@@ -12,15 +12,32 @@ log() {
   echo "==> $1"
 }
 
-# --- Node.js -----------------------------------------------------------
+# --- Node.js (via nvm, if available) --------------------------------------
+REQUIRED_NODE_MAJOR="$(tr -d '[:space:]' < .nvmrc)"
+
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+  log "nvm detected - installing/using Node $REQUIRED_NODE_MAJOR from .nvmrc"
+  set +u
+  # shellcheck disable=SC1091
+  . "$NVM_DIR/nvm.sh"
+  set -u
+  nvm install >/dev/null
+  nvm use >/dev/null
+else
+  log "nvm not found - skipping automatic Node version switch"
+  echo "    Install nvm (https://github.com/nvm-sh/nvm) so this project can auto-select Node $REQUIRED_NODE_MAJOR via .nvmrc."
+fi
+
 if ! command -v node >/dev/null 2>&1; then
-  echo "Node.js is required but was not found. Install Node.js 18+ from https://nodejs.org and re-run this script." >&2
+  echo "Node.js is required but was not found. Install Node.js $REQUIRED_NODE_MAJOR (ideally via nvm) and re-run this script." >&2
   exit 1
 fi
 
 NODE_MAJOR="$(node -e 'console.log(process.versions.node.split(".")[0])')"
-if [ "$NODE_MAJOR" -lt 18 ]; then
-  echo "Node.js 18+ is required (found $(node --version)). Please upgrade and re-run." >&2
+if [ "$NODE_MAJOR" != "$REQUIRED_NODE_MAJOR" ]; then
+  echo "Node.js $REQUIRED_NODE_MAJOR is required (found $(node --version))." >&2
+  echo "If you have nvm installed: nvm install && nvm use" >&2
   exit 1
 fi
 log "Node.js $(node --version) OK"

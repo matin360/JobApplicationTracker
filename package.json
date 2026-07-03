@@ -6,6 +6,9 @@
     "apps/client",
     "apps/server"
   ],
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "npm run dev --workspace apps/client",
     "dev:server": "npm run dev --workspace apps/server",

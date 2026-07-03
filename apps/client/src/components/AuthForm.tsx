@@ -43,7 +43,7 @@ const AuthForm = ({ mode, onSuccess }: AuthFormProps) => {
   const isValidPassword = password.length >= 8;
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.9rem' }}>
+    <form onSubmit={(event) => { void handleSubmit(event); }} style={{ display: 'grid', gap: '0.9rem' }}>
       {mode === 'signup' && (
         <label style={{ display: 'grid', gap: '0.35rem', fontSize: '0.95rem' }}>
           <span>Name</span>

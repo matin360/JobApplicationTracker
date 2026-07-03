@@ -9,10 +9,13 @@ vi.mock('../src/hooks/useAuth', () => ({
 }));
 
 describe('ProtectedRoute', () => {
+  let assignMock: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
+    assignMock = vi.fn();
     Object.defineProperty(window, 'location', {
       configurable: true,
-      value: { pathname: '/', assign: vi.fn() }
+      value: { pathname: '/', assign: assignMock }
     });
   });
 
@@ -37,7 +40,7 @@ describe('ProtectedRoute', () => {
       </ProtectedRoute>
     );
 
-    expect(window.location.assign).toHaveBeenCalledWith('/login');
+    expect(assignMock).toHaveBeenCalledWith('/login');
   });
 
   it('renders children when authenticated', () => {

@@ -15,11 +15,11 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@app/*": ["./src/app/*"],
+      "@lib/*": ["./src/lib/*"]
     },
-    "types": ["vite/client"]
+    "types": ["node", "vite/client"]
   },
   "include": ["src", "test"],
   "references": [{ "path": "./tsconfig.node.json" }]

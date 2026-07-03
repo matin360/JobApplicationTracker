@@ -1,1 +1,0 @@
-{"root":["./src/app.tsx","./src/auth.ts","./src/main.tsx","./src/components/authform.tsx","./src/components/authpage.tsx","./src/components/loginpage.tsx","./src/components/protectedroute.tsx","./src/hooks/useauth.ts","./test/app.test.tsx","./test/authform.test.tsx","./test/auth.test.tsx","./test/setup.ts"],"version":"5.9.3"}

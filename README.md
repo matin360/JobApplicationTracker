@@ -2,9 +2,22 @@
 
 This repository contains a monorepo for the Job Application Tracker MVP with a React + TypeScript client, a Node.js + Express API, and a Prisma-managed PostgreSQL database.
 
+## Node version
+
+This project requires Node **22** (see `.nvmrc`), and `npm install`/`npm ci` will refuse to run on any other version (`engine-strict=true` in `.npmrc`).
+
+If you use [nvm](https://github.com/nvm-sh/nvm), it picks up `.nvmrc` automatically:
+
+```bash
+nvm install   # installs Node 22 if you don't already have it
+nvm use       # switches this shell to it
+```
+
+`./scripts/setup.sh` (below) does this for you automatically if `nvm` is installed.
+
 ## Quick start
 
-Run the setup script from the repo root. It installs dependencies, creates local `.env` files, starts Postgres (via Docker, if available), and applies migrations + seed data - skipping any step that's already done, so it's safe to re-run:
+Run the setup script from the repo root. It switches to the right Node version (via `nvm`, if installed), installs dependencies, creates local `.env` files, starts Postgres (via Docker, if available), and applies migrations + seed data - skipping any step that's already done, so it's safe to re-run:
 
 ```bash
 ./scripts/setup.sh
@@ -20,7 +33,7 @@ npm run dev          # frontend on http://localhost:3000
 <details>
 <summary>Manual setup (if you'd rather not use the script)</summary>
 
-1. Install dependencies from the repo root:
+1. Make sure you're on Node 22 (`nvm use`, if you have nvm - see [Node version](#node-version)), then install dependencies from the repo root:
    ```bash
    npm install
    ```
