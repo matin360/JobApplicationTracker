@@ -9,3 +9,7 @@ dist/
 coverage/
 .DS_Store
 .setup-complete
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/

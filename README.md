@@ -92,14 +92,47 @@ This applies the Prisma migration and seeds the database with sample data.
 - Frontend: `apps/client/.env` can optionally define `VITE_API_URL` and `VITE_PORT`. If `VITE_API_URL` is unset, the client calls the API via relative `/api/...` paths, which the Vite dev server proxies to `http://localhost:4000` (or `VITE_API_URL`, if set, as the proxy target).
 - Backend: `apps/server/.env` should define `PORT` and `DATABASE_URL`.
 
-## Development checks
+## Testing
 
-Run the server and client tests:
+The project has two layers of tests:
+
+### Unit tests
+
+- **Client** (`apps/client/test/`, [Vitest](https://vitest.dev/) + Testing Library): components and hooks in isolation - the auth form, the `useAuth` hook, the protected-route redirect, and the sign-out flow (button rendering, in-flight state, redirect on success and on failure).
+- **Server** (`apps/server/src/*.test.ts`, `node:test`): password hashing, signup validation, and session-cookie authentication. These talk to the real database, so Postgres must be running (`docker compose up -d db`).
+
+Run both from the repo root, or each workspace individually:
 
 ```bash
-npm test --workspace apps/server
-npm test --workspace apps/client
+npm test                            # client + server
+npm test --workspace apps/client    # client only (Postgres not needed)
+npm test --workspace apps/server    # server only (Postgres required)
 ```
+
+### End-to-end tests
+
+The e2e suite (`e2e/`, [Playwright](https://playwright.dev/)) drives the real stack in a headless browser and covers every page:
+
+- **Login page**: rendering, login/signup mode toggle, client-side validation hints, wrong-credential errors, and a full sign-in flow.
+- **Signup**: account creation through the UI and the duplicate-email error.
+- **Protected page**: the unauthenticated redirect to `/login`, dashboard content for signed-in users, and signing out (session invalidated server-side, redirect to login).
+
+One-time setup for the browser binary:
+
+```bash
+npx playwright install chromium
+```
+
+Postgres must be running (`docker compose up -d db`); `playwright.config.ts` starts the client and server dev servers automatically if nothing is already listening on ports 3000/4000. Note that the dockerized `client`/`server` containers bake the code into their images at build time - stop them (`docker compose stop client server`) or rebuild them if you want the e2e run to reflect local changes.
+
+```bash
+npm run test:e2e       # headless run
+npm run test:e2e:ui    # interactive UI mode
+```
+
+Test accounts are created with unique `e2e-*@example.com` emails on every run, so the suite never collides with existing data.
+
+## Development checks
 
 Run linting and builds:
 

@@ -15,10 +15,13 @@
     "build": "npm run build --workspace apps/client && npm run build --workspace apps/server",
     "start": "npm run start --workspace apps/server",
     "lint": "npm run lint --workspace apps/client && npm run lint --workspace apps/server",
-    "test": "echo \"No tests yet\""
+    "test": "npm run test --workspace apps/client && npm run test --workspace apps/server",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
+    "@playwright/test": "^1.61.1",
     "eslint": "^9.15.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.0",
