@@ -143,26 +143,27 @@ async function findUserBySessionToken(token: string): Promise<AuthUser | null> {
   };
 }
 
-// Middleware that checks the session cookie and attaches the authenticated user to the request.
-export async function bootstrapAuth(request: AuthenticatedRequest, _response: Response, next: NextFunction): Promise<void> {
+// Resolve the authenticated user (if any) from the session cookie, without advancing the middleware chain.
+async function resolveAuthenticatedUser(request: Request, response: Response): Promise<AuthUser | undefined> {
   const token = getCookieValue(request, COOKIE_NAME);
 
   if (!token) {
-    request.user = undefined;
-    next();
-    return;
+    return undefined;
   }
 
   const user = await findUserBySessionToken(token);
 
   if (!user) {
-    clearSessionCookie(_response);
-    request.user = undefined;
-    next();
-    return;
+    clearSessionCookie(response);
+    return undefined;
   }
 
-  request.user = user;
+  return user;
+}
+
+// Middleware that checks the session cookie and attaches the authenticated user to the request.
+export async function bootstrapAuth(request: AuthenticatedRequest, response: Response, next: NextFunction): Promise<void> {
+  request.user = await resolveAuthenticatedUser(request, response);
   next();
 }
 
@@ -172,7 +173,7 @@ export function getAuthenticatedUser(request: AuthenticatedRequest): AuthUser | 
 
 // Protect routes that require a valid authenticated session.
 export async function requireAuth(request: AuthenticatedRequest, response: Response, next: NextFunction): Promise<void> {
-  await bootstrapAuth(request, response, next);
+  request.user = await resolveAuthenticatedUser(request, response);
 
   if (!request.user) {
     response.status(401).json({ error: 'Unauthorized' });

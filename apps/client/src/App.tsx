@@ -1,17 +1,49 @@
+import { useState } from 'react';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './components/LoginPage';
+import { signOut } from './auth';
 
 const App = () => {
   const isAuthenticatedPage = window.location.pathname !== '/login';
+  const [signingOut, setSigningOut] = useState(false);
 
   if (!isAuthenticatedPage) {
     return <LoginPage />;
   }
 
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+    } finally {
+      window.location.assign('/login');
+    }
+  };
+
   return (
     <ProtectedRoute>
       <main style={{ fontFamily: 'Inter, sans-serif', padding: '2rem', maxWidth: '900px', margin: '0 auto' }}>
-        <h1>Job Application Tracker</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+          <h1>Job Application Tracker</h1>
+          <button
+            type="button"
+            onClick={() => { void handleSignOut(); }}
+            disabled={signingOut}
+            style={{
+              border: '1px solid #ccd4e0',
+              borderRadius: '10px',
+              padding: '0.6rem 1rem',
+              background: '#fff',
+              color: '#172033',
+              fontWeight: 600,
+              cursor: signingOut ? 'not-allowed' : 'pointer',
+              opacity: signingOut ? 0.7 : 1,
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {signingOut ? 'Signing out…' : 'Sign out'}
+          </button>
+        </div>
         <p>
           A self-hostable workspace for tracking applications, notes, reminders, and interviews.
         </p>
