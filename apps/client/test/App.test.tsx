@@ -100,10 +100,19 @@ describe('App sign out', () => {
   });
 
   it('disables the button and shows progress text while signing out', async () => {
-    let resolveSignOut: () => void = () => undefined;
-    (auth.signOut as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      () => new Promise<void>((resolve) => { resolveSignOut = resolve; })
-    );
+    let resolveSignOut!: () => void;
+
+    type SignOutFn = () => Promise<void>;
+
+    const signOutMock = auth.signOut as unknown as ReturnType<typeof vi.fn> & {
+      mockImplementation(fn: SignOutFn): void;
+    };
+
+    signOutMock.mockImplementation(() => {
+      return new Promise<void>((resolve) => {
+        resolveSignOut = resolve;
+      });
+    });
 
     render(<App />);
 
