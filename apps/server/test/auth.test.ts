@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { PrismaClient } from '@prisma/client';
 import type { Request, Response } from 'express';
 
-import { bootstrapAuth, hashPassword, signup, verifyPassword } from './auth';
-import type { AuthUser } from './auth';
+import { bootstrapAuth, hashPassword, signup, verifyPassword } from '../src/auth';
+import type { AuthUser } from '../src/auth';
 
 const prisma = new PrismaClient();
 

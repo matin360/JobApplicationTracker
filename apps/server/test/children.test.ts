@@ -11,10 +11,10 @@ import {
   updateInterview,
   updateNote,
   updateReminder
-} from './children';
-import { getApplication } from './applications';
-import { requireNoteOwnership } from './authorization';
-import type { AuthUser } from './auth';
+} from '../src/children';
+import { getApplication } from '../src/applications';
+import { requireNoteOwnership } from '../src/authorization';
+import type { AuthUser } from '../src/auth';
 
 const prisma = new PrismaClient();
 

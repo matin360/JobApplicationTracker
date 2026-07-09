@@ -16,8 +16,10 @@ export default tseslint.config(
       parser: tsParser,
       parserOptions: {
         // Automatically provides the absolute path of this file's folder
-        tsconfigRootDir: import.meta.dirname, 
-        project: ['./tsconfig.json'],
+        tsconfigRootDir: import.meta.dirname,
+        // Separate from tsconfig.json (which builds src only, rootDir "src")
+        // so type-aware linting also covers test/.
+        project: ['./tsconfig.eslint.json'],
       },
     },
     plugins: {

@@ -9,9 +9,9 @@ import {
   getApplication,
   listApplications,
   updateApplication
-} from './applications';
-import { requireApplicationOwnership } from './authorization';
-import type { AuthUser } from './auth';
+} from '../src/applications';
+import { requireApplicationOwnership } from '../src/authorization';
+import type { AuthUser } from '../src/auth';
 
 const prisma = new PrismaClient();
 
