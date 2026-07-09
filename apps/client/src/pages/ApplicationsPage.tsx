@@ -1,53 +1,166 @@
-import Badge from '../components/ui/Badge';
-import type { BadgeTone } from '../components/ui/Badge';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { APPLICATION_STATUSES, listApplications } from '../applications';
+import type { ApplicationRecord } from '../applications';
+import StatusBadge from '../components/applications/StatusBadge';
+import { formatDate } from '../components/applications/format';
 import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
 import Table from '../components/ui/Table';
-import type { TableColumn } from '../components/ui/Table';
+import type { TableColumn, TableSort } from '../components/ui/Table';
 
-interface MockApplication {
-  id: string;
-  company: string;
-  role: string;
-  status: 'Applied' | 'Interview' | 'Offer' | 'Rejected';
-  appliedOn: string;
+const columns: TableColumn<ApplicationRecord>[] = [
+  {
+    key: 'company',
+    header: 'Company',
+    sortable: true,
+    render: (row) => <Link to={`/applications/${row.id}`}>{row.company?.name ?? '—'}</Link>
+  },
+  {
+    key: 'roleTitle',
+    header: 'Role',
+    sortable: true,
+    render: (row) => <Link to={`/applications/${row.id}`}>{row.roleTitle}</Link>
+  },
+  { key: 'status', header: 'Status', sortable: true, render: (row) => <StatusBadge status={row.status} /> },
+  { key: 'appliedAt', header: 'Applied on', sortable: true, render: (row) => formatDate(row.appliedAt) },
+  { key: 'nextFollowUpAt', header: 'Next follow-up', sortable: true, render: (row) => formatDate(row.nextFollowUpAt) }
+];
+
+function compareValues(a: ApplicationRecord, b: ApplicationRecord, key: string): number {
+  const pick = (row: ApplicationRecord): string => {
+    switch (key) {
+      case 'company':
+        return row.company?.name?.toLowerCase() ?? '';
+      case 'roleTitle':
+        return row.roleTitle.toLowerCase();
+      case 'status':
+        return row.status;
+      case 'appliedAt':
+        return row.appliedAt ?? '';
+      case 'nextFollowUpAt':
+        return row.nextFollowUpAt ?? '';
+      default:
+        return '';
+    }
+  };
+
+  return pick(a).localeCompare(pick(b));
 }
 
-// Static placeholder rows; swapped for API data when the applications endpoints land.
-const mockApplications: MockApplication[] = [
-  { id: '1', company: 'Acme Corp', role: 'Frontend Engineer', status: 'Applied', appliedOn: '2026-06-28' },
-  { id: '2', company: 'Globex', role: 'Full-stack Developer', status: 'Interview', appliedOn: '2026-06-21' },
-  { id: '3', company: 'Initech', role: 'React Developer', status: 'Offer', appliedOn: '2026-06-10' },
-  { id: '4', company: 'Umbrella', role: 'Software Engineer', status: 'Rejected', appliedOn: '2026-06-02' }
-];
+const ApplicationsPage = () => {
+  const [applications, setApplications] = useState<ApplicationRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sort, setSort] = useState<TableSort | undefined>(undefined);
+  const navigate = useNavigate();
 
-const statusTone: Record<MockApplication['status'], BadgeTone> = {
-  Applied: 'info',
-  Interview: 'warning',
-  Offer: 'success',
-  Rejected: 'danger'
-};
+  useEffect(() => {
+    let isMounted = true;
 
-const columns: TableColumn<MockApplication>[] = [
-  { key: 'company', header: 'Company', render: (row) => row.company },
-  { key: 'role', header: 'Role', render: (row) => row.role },
-  { key: 'status', header: 'Status', render: (row) => <Badge tone={statusTone[row.status]}>{row.status}</Badge> },
-  { key: 'appliedOn', header: 'Applied on', render: (row) => row.appliedOn }
-];
+    listApplications()
+      .then((records) => {
+        if (isMounted) {
+          setApplications(records);
+        }
+      })
+      .catch((err: unknown) => {
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'Failed to load applications.');
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setLoading(false);
+        }
+      });
 
-const ApplicationsPage = () => (
-  <>
-    <div className="page-header">
-      <div>
-        <h1 className="page-title">Applications</h1>
-        <p className="page-subtitle">Track every application in one place.</p>
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const visibleApplications = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    let rows = applications.filter((row) => {
+      if (statusFilter !== 'all' && row.status !== statusFilter) {
+        return false;
+      }
+      if (!query) {
+        return true;
+      }
+      return (
+        row.roleTitle.toLowerCase().includes(query) ||
+        (row.company?.name.toLowerCase().includes(query) ?? false)
+      );
+    });
+
+    if (sort) {
+      rows = [...rows].sort((a, b) => {
+        const result = compareValues(a, b, sort.key);
+        return sort.direction === 'asc' ? result : -result;
+      });
+    }
+
+    return rows;
+  }, [applications, search, statusFilter, sort]);
+
+  const handleSortChange = (key: string) => {
+    setSort((current) => {
+      if (current?.key !== key) {
+        return { key, direction: 'asc' };
+      }
+      return { key, direction: current.direction === 'asc' ? 'desc' : 'asc' };
+    });
+  };
+
+  return (
+    <>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Applications</h1>
+          <p className="page-subtitle">Track every application in one place.</p>
+        </div>
+        <Button onClick={() => { void navigate('/applications/new'); }}>New application</Button>
       </div>
-      <Button disabled title="Coming soon">
-        New application
-      </Button>
-    </div>
 
-    <Table columns={columns} rows={mockApplications} rowKey={(row) => row.id} emptyMessage="No applications yet." />
-  </>
-);
+      <div className="filter-bar">
+        <Input
+          label="Search"
+          placeholder="Company or role"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+        <Select label="Status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+          <option value="all">All statuses</option>
+          {APPLICATION_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </Select>
+      </div>
+
+      {error ? <p className="form-error">{error}</p> : null}
+
+      {loading ? (
+        <p>Loading…</p>
+      ) : (
+        <Table
+          columns={columns}
+          rows={visibleApplications}
+          rowKey={(row) => row.id}
+          emptyMessage={applications.length === 0 ? 'No applications yet. Create your first one!' : 'No applications match your filters.'}
+          sort={sort}
+          onSortChange={handleSortChange}
+        />
+      )}
+    </>
+  );
+};
 
 export default ApplicationsPage;

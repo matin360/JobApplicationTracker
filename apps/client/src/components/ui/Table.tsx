@@ -4,6 +4,12 @@ export interface TableColumn<Row> {
   key: string;
   header: string;
   render: (row: Row) => ReactNode;
+  sortable?: boolean;
+}
+
+export interface TableSort {
+  key: string;
+  direction: 'asc' | 'desc';
 }
 
 interface TableProps<Row> {
@@ -11,9 +17,11 @@ interface TableProps<Row> {
   rows: Row[];
   rowKey: (row: Row) => string;
   emptyMessage?: string;
+  sort?: TableSort;
+  onSortChange?: (key: string) => void;
 }
 
-const Table = <Row,>({ columns, rows, rowKey, emptyMessage = 'Nothing here yet.' }: TableProps<Row>) => (
+const Table = <Row,>({ columns, rows, rowKey, emptyMessage = 'Nothing here yet.', sort, onSortChange }: TableProps<Row>) => (
   <div className="ui-table-wrap">
     {rows.length === 0 ? (
       <p className="ui-table__empty">{emptyMessage}</p>
@@ -22,7 +30,16 @@ const Table = <Row,>({ columns, rows, rowKey, emptyMessage = 'Nothing here yet.'
         <thead>
           <tr>
             {columns.map((column) => (
-              <th key={column.key}>{column.header}</th>
+              <th key={column.key} aria-sort={sort?.key === column.key ? (sort.direction === 'asc' ? 'ascending' : 'descending') : undefined}>
+                {column.sortable && onSortChange ? (
+                  <button type="button" className="ui-table__sort" onClick={() => onSortChange(column.key)}>
+                    {column.header}
+                    {sort?.key === column.key ? (sort.direction === 'asc' ? ' ▲' : ' ▼') : ''}
+                  </button>
+                ) : (
+                  column.header
+                )}
+              </th>
             ))}
           </tr>
         </thead>

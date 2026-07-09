@@ -16,6 +16,15 @@ vi.mock('../src/auth', () => ({
   signOut: vi.fn()
 }));
 
+vi.mock('../src/applications', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../src/applications')>()),
+  listApplications: vi.fn().mockResolvedValue([]),
+  getApplication: vi.fn(),
+  createApplication: vi.fn(),
+  updateApplication: vi.fn(),
+  deleteApplication: vi.fn()
+}));
+
 const mockAuth = (state: { user: { id: string; email: string; name: string | null } | null; loading: boolean }) => {
   (useAuth as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
     ...state,
@@ -76,11 +85,11 @@ describe('routing', () => {
     expect(screen.getByRole('navigation', { name: /main navigation/i })).toBeInTheDocument();
   });
 
-  it('renders the applications list at /applications', () => {
+  it('renders the applications list at /applications', async () => {
     renderAt('/applications');
 
     expect(screen.getByRole('heading', { name: 'Applications' })).toBeInTheDocument();
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(await screen.findByText(/No applications yet/i)).toBeInTheDocument();
   });
 
   it('renders settings at /settings', () => {

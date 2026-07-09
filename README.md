@@ -117,6 +117,7 @@ The e2e suite (`e2e/`, [Playwright](https://playwright.dev/)) drives the real st
 - **Signup**: account creation through the UI and the duplicate-email error.
 - **Protected pages**: the unauthenticated redirect to `/login` (for every protected route), dashboard content for signed-in users, and signing out from the user menu (session invalidated server-side, redirect to login).
 - **Navigation**: moving between dashboard, applications, and settings via the sidebar, active-link highlighting, the brand link, and the mobile hamburger nav.
+- **Applications CRUD**: the full create → list → detail → edit → delete round trip, form validation, search/status filters, column sorting, and ownership isolation (one user's applications are invisible to another).
 
 One-time setup for the browser binary:
 

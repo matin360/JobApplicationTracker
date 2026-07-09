@@ -3,6 +3,13 @@ import cors from 'cors';
 import { config } from './config';
 import { bootstrapAuth, login, logout, me, requireAuth, signup } from './auth';
 import {
+  createApplication,
+  deleteApplication,
+  getApplication,
+  listApplications,
+  updateApplication
+} from './applications';
+import {
   requireApplicationOwnership,
   requireCompanyOwnership,
   requireInterviewOwnership,
@@ -65,25 +72,15 @@ app.delete('/api/companies/:companyId', requireAuth, requireCompanyOwnership(), 
   res.status(204).send();
 });
 
-app.get('/api/applications', requireAuth, (_req, res) => {
-  res.json({ applications: [] });
-});
+app.get('/api/applications', requireAuth, listApplications);
 
-app.post('/api/applications', requireAuth, (_req, res) => {
-  res.status(201).json({ application: null });
-});
+app.post('/api/applications', requireAuth, createApplication);
 
-app.get('/api/applications/:applicationId', requireAuth, requireApplicationOwnership(), (_req, res) => {
-  res.json({ application: null });
-});
+app.get('/api/applications/:applicationId', requireAuth, requireApplicationOwnership(), getApplication);
 
-app.patch('/api/applications/:applicationId', requireAuth, requireApplicationOwnership(), (_req, res) => {
-  res.json({ application: null });
-});
+app.patch('/api/applications/:applicationId', requireAuth, requireApplicationOwnership(), updateApplication);
 
-app.delete('/api/applications/:applicationId', requireAuth, requireApplicationOwnership(), (_req, res) => {
-  res.status(204).send();
-});
+app.delete('/api/applications/:applicationId', requireAuth, requireApplicationOwnership(), deleteApplication);
 
 app.post('/api/applications/:applicationId/notes', requireAuth, requireApplicationOwnership(), (_req, res) => {
   res.status(201).json({ note: null });
