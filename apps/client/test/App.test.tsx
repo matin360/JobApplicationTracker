@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import App from '../src/App';
-import ProtectedRoute from '../src/components/ProtectedRoute';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { AppRoutes } from '../src/App';
 import useAuth from '../src/hooks/useAuth';
-import * as auth from '../src/auth';
 
 vi.mock('../src/hooks/useAuth', () => ({
   __esModule: true,
@@ -17,121 +16,90 @@ vi.mock('../src/auth', () => ({
   signOut: vi.fn()
 }));
 
-describe('ProtectedRoute', () => {
-  let assignMock: ReturnType<typeof vi.fn>;
+const mockAuth = (state: { user: { id: string; email: string; name: string | null } | null; loading: boolean }) => {
+  (useAuth as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+    ...state,
+    authenticated: Boolean(state.user)
+  });
+};
 
+const renderAt = (path: string) =>
+  render(
+    <MemoryRouter initialEntries={[path]}>
+      <AppRoutes />
+    </MemoryRouter>
+  );
+
+const authenticatedUser = { id: '1', email: 'x@example.com', name: 'X' };
+
+describe('route guards', () => {
   beforeEach(() => {
-    assignMock = vi.fn();
-    Object.defineProperty(window, 'location', {
-      configurable: true,
-      value: { pathname: '/', assign: assignMock }
-    });
+    vi.clearAllMocks();
   });
 
-  it('shows loading fallback while auth is loading', () => {
-    (useAuth as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ user: null, loading: true, authenticated: false });
+  it('shows a loading fallback while auth is loading', () => {
+    mockAuth({ user: null, loading: true });
 
-    render(
-      <ProtectedRoute>
-        <div>Protected</div>
-      </ProtectedRoute>
-    );
+    renderAt('/dashboard');
 
     expect(screen.getByText(/Loading…/i)).toBeInTheDocument();
   });
 
-  it('redirects to login when not authenticated', () => {
-    (useAuth as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ user: null, loading: false, authenticated: false });
+  it('redirects unauthenticated users from protected pages to the login page', () => {
+    mockAuth({ user: null, loading: false });
 
-    render(
-      <ProtectedRoute>
-        <div>Protected</div>
-      </ProtectedRoute>
-    );
+    renderAt('/dashboard');
 
-    expect(assignMock).toHaveBeenCalledWith('/login');
+    expect(screen.getByRole('heading', { name: /sign in/i })).toBeInTheDocument();
   });
 
-  it('renders children when authenticated', () => {
-    (useAuth as unknown as ReturnType<typeof vi.fn>).mockReturnValue({ user: { id: '1', email: 'x@example.com', name: 'X' }, loading: false, authenticated: true });
+  it('renders the login page without authentication', () => {
+    mockAuth({ user: null, loading: false });
 
-    render(
-      <ProtectedRoute>
-        <div>Protected</div>
-      </ProtectedRoute>
-    );
+    renderAt('/login');
 
-    expect(screen.getByText(/Protected/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /sign in/i })).toBeInTheDocument();
   });
 });
 
-describe('App sign out', () => {
-  let assignMock: ReturnType<typeof vi.fn>;
-
+describe('routing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    assignMock = vi.fn();
-    Object.defineProperty(window, 'location', {
-      configurable: true,
-      value: { pathname: '/', assign: assignMock }
-    });
-    (useAuth as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
-      user: { id: '1', email: 'x@example.com', name: 'X' },
-      loading: false,
-      authenticated: true
-    });
+    mockAuth({ user: authenticatedUser, loading: false });
   });
 
-  it('shows a sign out button on the protected page', () => {
-    render(<App />);
+  it('renders the dashboard at /dashboard inside the layout shell', () => {
+    renderAt('/dashboard');
 
-    expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Job Application Tracker' })).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: /main navigation/i })).toBeInTheDocument();
   });
 
-  it('signs out and redirects to /login when the button is clicked', async () => {
-    (auth.signOut as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+  it('renders the applications list at /applications', () => {
+    renderAt('/applications');
 
-    render(<App />);
-
-    fireEvent.click(screen.getByRole('button', { name: /sign out/i }));
-
-    await waitFor(() => expect(auth.signOut).toHaveBeenCalledTimes(1));
-    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/login'));
+    expect(screen.getByRole('heading', { name: 'Applications' })).toBeInTheDocument();
+    expect(screen.getByRole('table')).toBeInTheDocument();
   });
 
-  it('disables the button and shows progress text while signing out', async () => {
-    let resolveSignOut!: () => void;
+  it('renders settings at /settings', () => {
+    renderAt('/settings');
 
-    type SignOutFn = () => Promise<void>;
-
-    const signOutMock = auth.signOut as unknown as ReturnType<typeof vi.fn> & {
-      mockImplementation(fn: SignOutFn): void;
-    };
-
-    signOutMock.mockImplementation(() => {
-      return new Promise<void>((resolve) => {
-        resolveSignOut = resolve;
-      });
-    });
-
-    render(<App />);
-
-    fireEvent.click(screen.getByRole('button', { name: /sign out/i }));
-
-    const button = await screen.findByRole('button', { name: /signing out…/i });
-    expect(button).toBeDisabled();
-
-    resolveSignOut();
-    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/login'));
+    expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Email')).toHaveValue('x@example.com');
   });
 
-  it('still redirects to /login when the logout request fails', async () => {
-    (auth.signOut as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('network down'));
+  it('redirects unknown paths to the dashboard', () => {
+    renderAt('/nonsense');
 
-    render(<App />);
+    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+  });
 
-    fireEvent.click(screen.getByRole('button', { name: /sign out/i }));
+  it('marks the current page as active in the nav', () => {
+    renderAt('/applications');
 
-    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/login'));
+    expect(screen.getByRole('link', { name: 'Applications' })).toHaveClass('active');
+    expect(screen.getByRole('link', { name: 'Dashboard' })).not.toHaveClass('active');
   });
 });

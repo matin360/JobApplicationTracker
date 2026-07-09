@@ -115,7 +115,8 @@ The e2e suite (`e2e/`, [Playwright](https://playwright.dev/)) drives the real st
 
 - **Login page**: rendering, login/signup mode toggle, client-side validation hints, wrong-credential errors, and a full sign-in flow.
 - **Signup**: account creation through the UI and the duplicate-email error.
-- **Protected page**: the unauthenticated redirect to `/login`, dashboard content for signed-in users, and signing out (session invalidated server-side, redirect to login).
+- **Protected pages**: the unauthenticated redirect to `/login` (for every protected route), dashboard content for signed-in users, and signing out from the user menu (session invalidated server-side, redirect to login).
+- **Navigation**: moving between dashboard, applications, and settings via the sidebar, active-link highlighting, the brand link, and the mobile hamburger nav.
 
 One-time setup for the browser binary:
 

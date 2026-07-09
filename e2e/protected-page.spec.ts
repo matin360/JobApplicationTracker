@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { makeTestUser, signUpViaApi } from './helpers';
 
-test.describe('protected page', () => {
+test.describe('protected pages', () => {
   test('redirects unauthenticated visitors to /login', async ({ page }) => {
     await page.goto('/');
 
@@ -9,31 +9,38 @@ test.describe('protected page', () => {
     await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
   });
 
-  test('shows the dashboard content to a signed-in user', async ({ page }) => {
+  test('redirects unauthenticated visitors from every protected page', async ({ page }) => {
+    for (const path of ['/dashboard', '/applications', '/settings']) {
+      await page.goto(path);
+      await page.waitForURL('**/login');
+    }
+  });
+
+  test('shows the dashboard to a signed-in user', async ({ page }) => {
     const user = makeTestUser('dashboard');
     await page.goto('/login');
     await signUpViaApi(page, user);
 
-    await page.goto('/');
+    await page.goto('/dashboard');
 
-    await expect(page.getByRole('heading', { name: 'Job Application Tracker' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Planned MVP' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Current status' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+    await expect(page.getByText('Total applications')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Recent activity' })).toBeVisible();
   });
 
-  test('signing out clears the session and redirects to /login', async ({ page }) => {
+  test('signing out from the user menu clears the session and redirects to /login', async ({ page }) => {
     const user = makeTestUser('signout');
     await page.goto('/login');
     await signUpViaApi(page, user);
 
-    await page.goto('/');
-    await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+    await page.goto('/dashboard');
 
     // The session is valid before signing out.
     const meBefore = await page.request.get('/api/auth/me');
     expect(meBefore.status()).toBe(200);
 
+    await page.getByRole('button', { name: `${user.name} ▾` }).click();
+    await expect(page.getByText(user.email)).toBeVisible();
     await page.getByRole('button', { name: 'Sign out' }).click();
     await page.waitForURL('**/login');
 
@@ -41,8 +48,8 @@ test.describe('protected page', () => {
     const meAfter = await page.request.get('/api/auth/me');
     expect(meAfter.status()).toBe(401);
 
-    // Revisiting the protected page bounces back to /login.
-    await page.goto('/');
+    // Revisiting a protected page bounces back to /login.
+    await page.goto('/dashboard');
     await page.waitForURL('**/login');
   });
 });

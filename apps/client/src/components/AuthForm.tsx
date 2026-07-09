@@ -31,7 +31,7 @@ const AuthForm = ({ mode, onSuccess }: AuthFormProps) => {
         : await signUp(payload);
 
       onSuccess?.(response.user);
-      window.location.assign('/');
+      window.location.assign('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.');
     } finally {

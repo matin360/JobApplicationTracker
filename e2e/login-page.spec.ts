@@ -45,7 +45,7 @@ test.describe('login page', () => {
     await expect(page).toHaveURL(/\/login$/);
   });
 
-  test('signs in an existing user and lands on the protected page', async ({ page, context }) => {
+  test('signs in an existing user and lands on the dashboard', async ({ page, context }) => {
     const user = makeTestUser('login');
 
     // Create the account via the API, then clear cookies so we exercise a fresh login.
@@ -58,13 +58,13 @@ test.describe('login page', () => {
     await page.getByPlaceholder('At least 8 characters').fill(user.password);
     await page.getByRole('button', { name: 'Sign in' }).click();
 
-    await page.waitForURL('/');
-    await expect(page.getByRole('heading', { name: 'Job Application Tracker' })).toBeVisible();
+    await page.waitForURL('/dashboard');
+    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
   });
 });
 
 test.describe('signup page', () => {
-  test('creates a new account and lands on the protected page', async ({ page }) => {
+  test('creates a new account and lands on the dashboard', async ({ page }) => {
     const user = makeTestUser('signup');
 
     await page.goto('/login');
@@ -75,9 +75,9 @@ test.describe('signup page', () => {
     await page.getByPlaceholder('At least 8 characters').fill(user.password);
     await page.getByRole('button', { name: 'Create account' }).click();
 
-    await page.waitForURL('/');
-    await expect(page.getByRole('heading', { name: 'Job Application Tracker' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+    await page.waitForURL('/dashboard');
+    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+    await expect(page.getByRole('button', { name: `${user.name} ▾` })).toBeVisible();
   });
 
   test('rejects signing up with an email that is already registered', async ({ page, context }) => {

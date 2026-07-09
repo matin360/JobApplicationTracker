@@ -38,7 +38,9 @@ const AuthPage = () => {
 };
 
 const toggleStyle: React.CSSProperties = {
-  border: '1px solid #ccd4e0',
+  borderWidth: '1px',
+  borderStyle: 'solid',
+  borderColor: '#ccd4e0',
   borderRadius: '999px',
   padding: '0.45rem 0.8rem',
   background: '#fff',

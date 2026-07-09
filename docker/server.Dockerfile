@@ -7,6 +7,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY apps/client/package.json ./apps/client/package.json
 COPY apps/server/package.json ./apps/server/package.json
+# The server workspace's postinstall runs `prisma generate`, which needs the schema.
+COPY apps/server/prisma ./apps/server/prisma
 
 RUN npm install
 

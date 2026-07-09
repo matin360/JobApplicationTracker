@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Navigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 
 interface ProtectedRouteProps {
@@ -16,10 +17,7 @@ const ProtectedRoute = ({ children, fallback = <p>Loading…</p> }: ProtectedRou
 
   // If there is no authenticated user, redirect to the login page.
   if (!user) {
-    if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-      window.location.assign('/login');
-    }
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
