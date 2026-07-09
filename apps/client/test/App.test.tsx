@@ -25,6 +25,15 @@ vi.mock('../src/applications', async (importOriginal) => ({
   deleteApplication: vi.fn()
 }));
 
+vi.mock('../src/dashboard', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../src/dashboard')>()),
+  getDashboardSummary: vi.fn().mockResolvedValue({
+    statusCounts: { saved: 0, applied: 0, interviewing: 0, offer: 0, rejected: 0, withdrawn: 0 },
+    reminders: { active: 0, upcoming: 0, upcomingList: [] },
+    recentApplications: []
+  })
+}));
+
 const mockAuth = (state: { user: { id: string; email: string; name: string | null } | null; loading: boolean }) => {
   (useAuth as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
     ...state,
@@ -77,10 +86,10 @@ describe('routing', () => {
     mockAuth({ user: authenticatedUser, loading: false });
   });
 
-  it('renders the dashboard at /dashboard inside the layout shell', () => {
+  it('renders the dashboard at /dashboard inside the layout shell', async () => {
     renderAt('/dashboard');
 
-    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Job Application Tracker' })).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: /main navigation/i })).toBeInTheDocument();
   });
@@ -99,10 +108,10 @@ describe('routing', () => {
     expect(screen.getByLabelText('Email')).toHaveValue('x@example.com');
   });
 
-  it('redirects unknown paths to the dashboard', () => {
+  it('redirects unknown paths to the dashboard', async () => {
     renderAt('/nonsense');
 
-    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
   });
 
   it('marks the current page as active in the nav', () => {

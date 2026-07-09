@@ -63,6 +63,17 @@ docker compose up --build
 
 This builds the client and server images and starts Postgres. The frontend is served at `http://localhost:3000` and the API at `http://localhost:4000`. The server container's `VITE_API_URL`/`DATABASE_URL` are set directly in `docker-compose.yml`, so no `.env` files are required for this path.
 
+## Dashboard
+
+The dashboard (`/dashboard`) is powered by a single endpoint, `GET /api/dashboard/summary`, scoped to the signed-in user:
+
+- **Status cards** — application counts for every status (saved, applied, interviewing, offer, rejected, withdrawn), zero-filled.
+- **Upcoming reminders** — incomplete reminders due within the next 7 days (soonest first, capped at 5), each linking to its application and completable in place; the total active-reminder count is shown alongside.
+- **Applications by status** — a single-hue horizontal bar chart of the same status counts (dependency-free inline SVG).
+- **Recent applications** — the 10 newest applications with company, role, status, applied date, and next follow-up, linking to their detail pages.
+
+The applications list supports search (company/role), a status filter, and an applied-date range filter; all combine and apply instantly client-side.
+
 ## Auth flow
 
 The app uses cookie-based sessions for authentication.
@@ -118,6 +129,8 @@ The e2e suite (`e2e/`, [Playwright](https://playwright.dev/)) drives the real st
 - **Protected pages**: the unauthenticated redirect to `/login` (for every protected route), dashboard content for signed-in users, and signing out from the user menu (session invalidated server-side, redirect to login).
 - **Navigation**: moving between dashboard, applications, and settings via the sidebar, active-link highlighting, the brand link, and the mobile hamburger nav.
 - **Applications CRUD**: the full create → list → detail → edit → delete round trip, form validation, search/status filters, column sorting, and ownership isolation (one user's applications are invisible to another).
+- **Detail workspace**: notes (add/edit/delete), reminders (add/complete/reopen/delete with overdue badges), interviews (add/edit with stage and date), the activity timeline, and ownership checks on all child records.
+- **Dashboard**: status counts, the chart, upcoming reminders (including completing one in place), recent applications with links, empty states, and the applied-date range filter on the list.
 
 One-time setup for the browser binary:
 

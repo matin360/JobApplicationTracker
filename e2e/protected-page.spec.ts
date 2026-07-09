@@ -24,8 +24,8 @@ test.describe('protected pages', () => {
     await page.goto('/dashboard');
 
     await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
-    await expect(page.getByText('Total applications')).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Recent activity' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Upcoming reminders' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Recent applications' })).toBeVisible();
   });
 
   test('signing out from the user menu clears the session and redirects to /login', async ({ page }) => {

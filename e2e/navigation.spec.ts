@@ -11,7 +11,7 @@ test.describe('navigation', () => {
 
     await page.getByRole('link', { name: 'Applications' }).click();
     await expect(page).toHaveURL(/\/applications$/);
-    await expect(page.getByRole('heading', { name: 'Applications' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Applications', exact: true })).toBeVisible();
     await expect(page.getByText('No applications yet. Create your first one!')).toBeVisible();
 
     await page.getByRole('link', { name: 'Settings' }).click();
@@ -63,7 +63,7 @@ test.describe('navigation', () => {
 
     await applicationsLink.click();
     await expect(page).toHaveURL(/\/applications$/);
-    await expect(page.getByRole('heading', { name: 'Applications' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Applications', exact: true })).toBeVisible();
 
     // The nav closes itself after navigating.
     await expect(page.getByRole('link', { name: 'Dashboard' })).not.toBeVisible();

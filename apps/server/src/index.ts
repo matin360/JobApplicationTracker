@@ -9,6 +9,18 @@ import {
   listApplications,
   updateApplication
 } from './applications';
+import { getDashboardSummary } from './dashboard';
+import {
+  createInterview,
+  createNote,
+  createReminder,
+  deleteInterview,
+  deleteNote,
+  deleteReminder,
+  updateInterview,
+  updateNote,
+  updateReminder
+} from './children';
 import {
   requireApplicationOwnership,
   requireCompanyOwnership,
@@ -43,14 +55,7 @@ app.post('/api/auth/login', login);
 app.post('/api/auth/logout', logout);
 app.get('/api/auth/me', requireAuth, me);
 
-app.get('/api/dashboard/summary', requireAuth, (_req, res) => {
-  res.json({
-    totalApplications: 0,
-    activeApplications: 0,
-    interviewsScheduled: 0,
-    followUpsDue: 0
-  });
-});
+app.get('/api/dashboard/summary', requireAuth, getDashboardSummary);
 
 app.get('/api/companies', requireAuth, (_req, res) => {
   res.json({ companies: [] });
@@ -82,41 +87,23 @@ app.patch('/api/applications/:applicationId', requireAuth, requireApplicationOwn
 
 app.delete('/api/applications/:applicationId', requireAuth, requireApplicationOwnership(), deleteApplication);
 
-app.post('/api/applications/:applicationId/notes', requireAuth, requireApplicationOwnership(), (_req, res) => {
-  res.status(201).json({ note: null });
-});
+app.post('/api/applications/:applicationId/notes', requireAuth, requireApplicationOwnership(), createNote);
 
-app.patch('/api/notes/:noteId', requireAuth, requireNoteOwnership(), (_req, res) => {
-  res.json({ note: null });
-});
+app.patch('/api/notes/:noteId', requireAuth, requireNoteOwnership(), updateNote);
 
-app.delete('/api/notes/:noteId', requireAuth, requireNoteOwnership(), (_req, res) => {
-  res.status(204).send();
-});
+app.delete('/api/notes/:noteId', requireAuth, requireNoteOwnership(), deleteNote);
 
-app.post('/api/applications/:applicationId/reminders', requireAuth, requireApplicationOwnership(), (_req, res) => {
-  res.status(201).json({ reminder: null });
-});
+app.post('/api/applications/:applicationId/reminders', requireAuth, requireApplicationOwnership(), createReminder);
 
-app.patch('/api/reminders/:reminderId', requireAuth, requireReminderOwnership(), (_req, res) => {
-  res.json({ reminder: null });
-});
+app.patch('/api/reminders/:reminderId', requireAuth, requireReminderOwnership(), updateReminder);
 
-app.delete('/api/reminders/:reminderId', requireAuth, requireReminderOwnership(), (_req, res) => {
-  res.status(204).send();
-});
+app.delete('/api/reminders/:reminderId', requireAuth, requireReminderOwnership(), deleteReminder);
 
-app.post('/api/applications/:applicationId/interviews', requireAuth, requireApplicationOwnership(), (_req, res) => {
-  res.status(201).json({ interview: null });
-});
+app.post('/api/applications/:applicationId/interviews', requireAuth, requireApplicationOwnership(), createInterview);
 
-app.patch('/api/interviews/:interviewId', requireAuth, requireInterviewOwnership(), (_req, res) => {
-  res.json({ interview: null });
-});
+app.patch('/api/interviews/:interviewId', requireAuth, requireInterviewOwnership(), updateInterview);
 
-app.delete('/api/interviews/:interviewId', requireAuth, requireInterviewOwnership(), (_req, res) => {
-  res.status(204).send();
-});
+app.delete('/api/interviews/:interviewId', requireAuth, requireInterviewOwnership(), deleteInterview);
 
 app.get('/api/resumes', requireAuth, (_req, res) => {
   res.json({ resumes: [] });

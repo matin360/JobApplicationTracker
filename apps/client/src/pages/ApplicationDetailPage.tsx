@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { deleteApplication, getApplication } from '../applications';
-import type { ApplicationRecord } from '../applications';
+import type { ApplicationDetail } from '../applications';
+import ActivityTimeline from '../components/applications/ActivityTimeline';
+import InterviewsSection from '../components/applications/InterviewsSection';
+import NotesSection from '../components/applications/NotesSection';
+import RemindersSection from '../components/applications/RemindersSection';
 import StatusBadge from '../components/applications/StatusBadge';
 import { formatDate } from '../components/applications/format';
 import Badge from '../components/ui/Badge';
@@ -10,7 +14,7 @@ import Card from '../components/ui/Card';
 
 const ApplicationDetailPage = () => {
   const { applicationId } = useParams<{ applicationId: string }>();
-  const [application, setApplication] = useState<ApplicationRecord | null>(null);
+  const [application, setApplication] = useState<ApplicationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -147,6 +151,25 @@ const ApplicationDetailPage = () => {
           </div>
         </dl>
       </Card>
+
+      <div className="detail-grid">
+        <NotesSection
+          applicationId={application.id}
+          notes={application.notes}
+          onChange={(notes) => setApplication({ ...application, notes })}
+        />
+        <RemindersSection
+          applicationId={application.id}
+          reminders={application.reminders}
+          onChange={(reminders) => setApplication({ ...application, reminders })}
+        />
+        <InterviewsSection
+          applicationId={application.id}
+          interviews={application.interviews}
+          onChange={(interviews) => setApplication({ ...application, interviews })}
+        />
+        <ActivityTimeline application={application} />
+      </div>
 
       <p style={{ marginTop: '1rem' }}>
         <Link to="/applications">← Back to applications</Link>

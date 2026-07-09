@@ -6,7 +6,7 @@ import ApplicationDetailPage from '../src/pages/ApplicationDetailPage';
 import NewApplicationPage from '../src/pages/NewApplicationPage';
 import EditApplicationPage from '../src/pages/EditApplicationPage';
 import * as applications from '../src/applications';
-import type { ApplicationRecord } from '../src/applications';
+import type { ApplicationDetail } from '../src/applications';
 
 vi.mock('../src/applications', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../src/applications')>()),
@@ -14,15 +14,37 @@ vi.mock('../src/applications', async (importOriginal) => ({
   getApplication: vi.fn(),
   createApplication: vi.fn(),
   updateApplication: vi.fn(),
-  deleteApplication: vi.fn()
+  deleteApplication: vi.fn(),
+  createNote: vi.fn(),
+  updateNote: vi.fn(),
+  deleteNote: vi.fn(),
+  createReminder: vi.fn(),
+  updateReminder: vi.fn(),
+  deleteReminder: vi.fn(),
+  createInterview: vi.fn(),
+  updateInterview: vi.fn(),
+  deleteInterview: vi.fn()
 }));
 
 const mocked = applications as unknown as Record<
-  'listApplications' | 'getApplication' | 'createApplication' | 'updateApplication' | 'deleteApplication',
+  | 'listApplications'
+  | 'getApplication'
+  | 'createApplication'
+  | 'updateApplication'
+  | 'deleteApplication'
+  | 'createNote'
+  | 'updateNote'
+  | 'deleteNote'
+  | 'createReminder'
+  | 'updateReminder'
+  | 'deleteReminder'
+  | 'createInterview'
+  | 'updateInterview'
+  | 'deleteInterview',
   ReturnType<typeof vi.fn>
 >;
 
-function makeRecord(overrides: Partial<ApplicationRecord>): ApplicationRecord {
+function makeRecord(overrides: Partial<ApplicationDetail>): ApplicationDetail {
   return {
     id: 'app-1',
     company: { id: 'c1', name: 'Acme Corp' },
@@ -36,6 +58,9 @@ function makeRecord(overrides: Partial<ApplicationRecord>): ApplicationRecord {
     nextFollowUpAt: null,
     createdAt: '2026-07-01T00:00:00.000Z',
     updatedAt: '2026-07-01T00:00:00.000Z',
+    notes: [],
+    reminders: [],
+    interviews: [],
     ...overrides
   };
 }

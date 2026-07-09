@@ -55,6 +55,8 @@ const ApplicationsPage = () => {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [appliedFrom, setAppliedFrom] = useState('');
+  const [appliedTo, setAppliedTo] = useState('');
   const [sort, setSort] = useState<TableSort | undefined>(undefined);
   const navigate = useNavigate();
 
@@ -90,6 +92,17 @@ const ApplicationsPage = () => {
       if (statusFilter !== 'all' && row.status !== statusFilter) {
         return false;
       }
+      // Date-range filter on the applied date (inclusive; unset bounds are open).
+      const appliedDate = row.appliedAt ? row.appliedAt.slice(0, 10) : null;
+      if ((appliedFrom || appliedTo) && !appliedDate) {
+        return false;
+      }
+      if (appliedFrom && appliedDate && appliedDate < appliedFrom) {
+        return false;
+      }
+      if (appliedTo && appliedDate && appliedDate > appliedTo) {
+        return false;
+      }
       if (!query) {
         return true;
       }
@@ -107,7 +120,7 @@ const ApplicationsPage = () => {
     }
 
     return rows;
-  }, [applications, search, statusFilter, sort]);
+  }, [applications, search, statusFilter, appliedFrom, appliedTo, sort]);
 
   const handleSortChange = (key: string) => {
     setSort((current) => {
@@ -143,6 +156,8 @@ const ApplicationsPage = () => {
             </option>
           ))}
         </Select>
+        <Input label="Applied from" type="date" value={appliedFrom} onChange={(event) => setAppliedFrom(event.target.value)} />
+        <Input label="Applied to" type="date" value={appliedTo} onChange={(event) => setAppliedTo(event.target.value)} />
       </div>
 
       {error ? <p className="form-error">{error}</p> : null}

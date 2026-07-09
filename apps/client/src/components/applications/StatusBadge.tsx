@@ -7,7 +7,8 @@ const statusTone: Record<ApplicationStatus, BadgeTone> = {
   applied: 'info',
   interviewing: 'warning',
   offer: 'success',
-  rejected: 'danger'
+  rejected: 'danger',
+  withdrawn: 'neutral'
 };
 
 const StatusBadge = ({ status }: { status: ApplicationStatus }) => (

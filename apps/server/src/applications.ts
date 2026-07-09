@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import type { Prisma } from '@prisma/client';
 import type { Request, Response } from 'express';
 import type { AuthUser } from './auth';
+import { serializeInterview, serializeNote, serializeReminder } from './children';
 
 interface AuthenticatedRequest extends Request {
   user?: AuthUser;
@@ -9,7 +10,7 @@ interface AuthenticatedRequest extends Request {
 
 const prisma = new PrismaClient();
 
-export const APPLICATION_STATUSES = ['saved', 'applied', 'interviewing', 'offer', 'rejected'] as const;
+export const APPLICATION_STATUSES = ['saved', 'applied', 'interviewing', 'offer', 'rejected', 'withdrawn'] as const;
 export const APPLICATION_PRIORITIES = ['low', 'medium', 'high'] as const;
 
 type ApplicationWithCompany = Prisma.ApplicationGetPayload<{ include: { company: true } }>;
@@ -206,10 +207,16 @@ export async function createApplication(request: AuthenticatedRequest, response:
   response.status(201).json({ application: serializeApplication(application) });
 }
 
+// Detail view: the application plus all child records for the workspace page.
 export async function getApplication(request: AuthenticatedRequest, response: Response): Promise<void> {
   const application = await prisma.application.findUnique({
     where: { id: String(request.params.applicationId) },
-    include: { company: true }
+    include: {
+      company: true,
+      notes: { orderBy: { createdAt: 'desc' } },
+      reminders: { orderBy: { dueAt: 'asc' } },
+      interviews: { orderBy: [{ scheduledAt: 'asc' }, { createdAt: 'asc' }] }
+    }
   });
 
   if (!application) {
@@ -217,7 +224,14 @@ export async function getApplication(request: AuthenticatedRequest, response: Re
     return;
   }
 
-  response.json({ application: serializeApplication(application) });
+  response.json({
+    application: {
+      ...serializeApplication(application),
+      notes: application.notes.map(serializeNote),
+      reminders: application.reminders.map(serializeReminder),
+      interviews: application.interviews.map(serializeInterview)
+    }
+  });
 }
 
 export async function updateApplication(request: AuthenticatedRequest, response: Response): Promise<void> {

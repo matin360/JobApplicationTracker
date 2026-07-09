@@ -1,56 +1,153 @@
+import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { updateReminder } from '../applications';
+import { getDashboardSummary } from '../dashboard';
+import type { DashboardSummary } from '../dashboard';
+import { APPLICATION_STATUSES } from '../applications';
+import StatusBadge from '../components/applications/StatusBadge';
+import { formatDate } from '../components/applications/format';
+import StatusChart from '../components/dashboard/StatusChart';
+import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
-import Badge from '../components/ui/Badge';
+import Table from '../components/ui/Table';
+import type { TableColumn } from '../components/ui/Table';
+import type { RecentApplication, UpcomingReminder } from '../dashboard';
 
-// Static placeholder numbers; real data arrives with the applications API work.
-const stats = [
-  { label: 'Total applications', value: 12 },
-  { label: 'Active applications', value: 7 },
-  { label: 'Interviews scheduled', value: 3 },
-  { label: 'Follow-ups due', value: 2 }
+const recentColumns: TableColumn<RecentApplication>[] = [
+  {
+    key: 'company',
+    header: 'Company',
+    render: (row) => <Link to={`/applications/${row.id}`}>{row.companyName ?? '—'}</Link>
+  },
+  {
+    key: 'roleTitle',
+    header: 'Role',
+    render: (row) => <Link to={`/applications/${row.id}`}>{row.roleTitle}</Link>
+  },
+  { key: 'status', header: 'Status', render: (row) => <StatusBadge status={row.status} /> },
+  { key: 'appliedAt', header: 'Applied on', render: (row) => formatDate(row.appliedAt) },
+  { key: 'nextFollowUpAt', header: 'Next follow-up', render: (row) => formatDate(row.nextFollowUpAt) }
 ];
 
-const recentActivity = [
-  { id: '1', text: 'Applied to Frontend Engineer at Acme Corp', when: 'Today' },
-  { id: '2', text: 'Interview scheduled with Globex', when: 'Yesterday' },
-  { id: '3', text: 'Follow-up reminder for Initech', when: '2 days ago' }
-];
+const DashboardPage = () => {
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [completingId, setCompletingId] = useState<string | null>(null);
 
-const DashboardPage = () => (
-  <>
-    <div className="page-header">
-      <div>
-        <h1 className="page-title">Dashboard</h1>
-        <p className="page-subtitle">Your job search at a glance.</p>
+  const loadSummary = useCallback(async () => {
+    try {
+      setSummary(await getDashboardSummary());
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load the dashboard.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadSummary();
+  }, [loadSummary]);
+
+  const handleCompleteReminder = async (reminder: UpcomingReminder) => {
+    setCompletingId(reminder.id);
+    try {
+      await updateReminder(reminder.id, { completed: true });
+      await loadSummary();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to complete the reminder.');
+    } finally {
+      setCompletingId(null);
+    }
+  };
+
+  if (loading) {
+    return <p>Loading…</p>;
+  }
+
+  if (error || !summary) {
+    return (
+      <>
+        <p className="form-error">{error || 'Failed to load the dashboard.'}</p>
+        <Button variant="secondary" onClick={() => { setLoading(true); void loadSummary(); }}>
+          Retry
+        </Button>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-subtitle">Your job search at a glance.</p>
+        </div>
       </div>
-    </div>
 
-    <div className="stat-grid">
-      {stats.map((stat) => (
-        <Card key={stat.label} className="stat-card">
-          <p className="stat-card__value">{stat.value}</p>
-          <p className="stat-card__label">{stat.label}</p>
+      <div className="stat-grid">
+        {APPLICATION_STATUSES.map((status) => (
+          <Card key={status} className="stat-card">
+            <p className="stat-card__value">{summary.statusCounts[status] ?? 0}</p>
+            <p className="stat-card__label">{status}</p>
+          </Card>
+        ))}
+      </div>
+
+      <div className="content-grid">
+        <Card title="Upcoming reminders">
+          {summary.reminders.upcomingList.length === 0 ? (
+            <p className="page-subtitle">Nothing due in the next 7 days.</p>
+          ) : (
+            <ul className="child-list">
+              {summary.reminders.upcomingList.map((reminder) => (
+                <li key={reminder.id} className="child-item">
+                  <p className="child-item__content">{reminder.title}</p>
+                  <p className="child-item__meta">
+                    Due {formatDate(reminder.dueAt)} ·{' '}
+                    <Link to={`/applications/${reminder.application.id}`}>
+                      {reminder.application.companyName
+                        ? `${reminder.application.roleTitle} at ${reminder.application.companyName}`
+                        : reminder.application.roleTitle}
+                    </Link>
+                  </p>
+                  <div className="child-item__actions">
+                    <Button
+                      variant="secondary"
+                      disabled={completingId === reminder.id}
+                      onClick={() => { void handleCompleteReminder(reminder); }}
+                    >
+                      {completingId === reminder.id ? 'Completing…' : 'Complete'}
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="page-subtitle" style={{ marginTop: '0.75rem' }}>
+            {summary.reminders.active} active reminder{summary.reminders.active === 1 ? '' : 's'} in total.
+          </p>
         </Card>
-      ))}
-    </div>
 
-    <div className="content-grid">
-      <Card title="Recent activity">
-        <ul>
-          {recentActivity.map((item) => (
-            <li key={item.id}>
-              {item.text} <Badge tone="neutral">{item.when}</Badge>
-            </li>
-          ))}
-        </ul>
-      </Card>
-      <Card title="Getting started">
-        <p>
-          This dashboard will show live pipeline data once applications tracking lands. For now it&apos;s a
-          preview of the layout.
-        </p>
-      </Card>
-    </div>
-  </>
-);
+        <Card title="Applications by status">
+          <StatusChart statusCounts={summary.statusCounts} />
+        </Card>
+      </div>
+
+      <div style={{ marginTop: '1rem' }}>
+        <Card title="Recent applications">
+          {summary.recentApplications.length === 0 ? (
+            <p className="page-subtitle">
+              No applications yet. <Link to="/applications/new">Create your first one</Link>.
+            </p>
+          ) : (
+            <Table columns={recentColumns} rows={summary.recentApplications} rowKey={(row) => row.id} />
+          )}
+        </Card>
+      </div>
+    </>
+  );
+};
 
 export default DashboardPage;
