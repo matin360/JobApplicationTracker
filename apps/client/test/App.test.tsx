@@ -35,7 +35,7 @@ vi.mock('../src/dashboard', async (importOriginal) => ({
 }));
 
 const mockAuth = (state: { user: { id: string; email: string; name: string | null } | null; loading: boolean }) => {
-  (useAuth as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+  vi.mocked(useAuth).mockReturnValue({
     ...state,
     authenticated: Boolean(state.user)
   });

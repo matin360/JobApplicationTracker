@@ -30,7 +30,7 @@ describe('useAuth', () => {
 
   it('returns an authenticated user when getCurrentUser resolves', async () => {
     const fakeUser = { id: '1', email: 'user@example.com', name: 'User' };
-    (auth.getCurrentUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(fakeUser);
+    vi.mocked(auth.getCurrentUser).mockResolvedValue(fakeUser);
 
     renderWithProvider();
 
@@ -40,7 +40,7 @@ describe('useAuth', () => {
   });
 
   it('returns unauthenticated when getCurrentUser returns null', async () => {
-    (auth.getCurrentUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    vi.mocked(auth.getCurrentUser).mockResolvedValue(null);
 
     renderWithProvider();
 

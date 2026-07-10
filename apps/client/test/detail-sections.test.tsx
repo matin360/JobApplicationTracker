@@ -4,9 +4,18 @@ import NotesSection from '../src/components/applications/NotesSection';
 import RemindersSection from '../src/components/applications/RemindersSection';
 import InterviewsSection from '../src/components/applications/InterviewsSection';
 import { buildActivity } from '../src/components/applications/activity';
-import * as children from '../src/api/children';
+import {
+  createInterview,
+  createNote,
+  createReminder,
+  deleteInterview,
+  deleteNote,
+  updateInterview,
+  updateNote,
+  updateReminder
+} from '../src/api/children';
 import type { ApplicationDetail } from '../src/api/applications';
-import type { InterviewRecord, NoteRecord, ReminderRecord } from '../src/api/children';
+import { makeInterview, makeNote, makeReminder } from './factories';
 
 vi.mock('../src/api/children', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../src/api/children')>()),
@@ -21,56 +30,12 @@ vi.mock('../src/api/children', async (importOriginal) => ({
   deleteInterview: vi.fn()
 }));
 
-const mocked = children as unknown as Record<
-  | 'createNote'
-  | 'updateNote'
-  | 'deleteNote'
-  | 'createReminder'
-  | 'updateReminder'
-  | 'deleteReminder'
-  | 'createInterview'
-  | 'updateInterview'
-  | 'deleteInterview',
-  ReturnType<typeof vi.fn>
->;
-
-const makeNote = (overrides: Partial<NoteRecord> = {}): NoteRecord => ({
-  id: 'n1',
-  applicationId: 'app-1',
-  content: 'Existing note',
-  createdAt: '2026-07-01T10:00:00.000Z',
-  updatedAt: '2026-07-01T10:00:00.000Z',
-  ...overrides
-});
-
-const makeReminder = (overrides: Partial<ReminderRecord> = {}): ReminderRecord => ({
-  id: 'r1',
-  applicationId: 'app-1',
-  title: 'Follow up',
-  dueAt: '2099-12-31T00:00:00.000Z',
-  completedAt: null,
-  createdAt: '2026-07-01T10:00:00.000Z',
-  updatedAt: '2026-07-01T10:00:00.000Z',
-  ...overrides
-});
-
-const makeInterview = (overrides: Partial<InterviewRecord> = {}): InterviewRecord => ({
-  id: 'i1',
-  applicationId: 'app-1',
-  stage: 'Phone screen',
-  scheduledAt: '2026-07-10T14:00:00.000Z',
-  notes: null,
-  createdAt: '2026-07-01T10:00:00.000Z',
-  updatedAt: '2026-07-01T10:00:00.000Z',
-  ...overrides
-});
-
 describe('NotesSection', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('adds a note and prepends it to the list', async () => {
     const created = makeNote({ id: 'n2', content: 'Fresh note' });
-    mocked.createNote.mockResolvedValue(created);
+    vi.mocked(createNote).mockResolvedValue(created);
     const onChange = vi.fn();
 
     render(<NotesSection applicationId="app-1" notes={[makeNote()]} onChange={onChange} />);
@@ -78,7 +43,7 @@ describe('NotesSection', () => {
     fireEvent.change(screen.getByLabelText('Add note'), { target: { value: 'Fresh note' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add note' }));
 
-    await waitFor(() => expect(mocked.createNote).toHaveBeenCalledWith('app-1', 'Fresh note'));
+    await waitFor(() => expect(vi.mocked(createNote)).toHaveBeenCalledWith('app-1', 'Fresh note'));
     expect(onChange).toHaveBeenCalledWith([created, makeNote()]);
   });
 
@@ -90,7 +55,7 @@ describe('NotesSection', () => {
 
   it('edits an existing note', async () => {
     const note = makeNote();
-    mocked.updateNote.mockResolvedValue({ ...note, content: 'Changed' });
+    vi.mocked(updateNote).mockResolvedValue({ ...note, content: 'Changed' });
     const onChange = vi.fn();
 
     render(<NotesSection applicationId="app-1" notes={[note]} onChange={onChange} />);
@@ -99,19 +64,19 @@ describe('NotesSection', () => {
     fireEvent.change(screen.getByLabelText('Edit note'), { target: { value: 'Changed' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save note' }));
 
-    await waitFor(() => expect(mocked.updateNote).toHaveBeenCalledWith('n1', 'Changed'));
+    await waitFor(() => expect(vi.mocked(updateNote)).toHaveBeenCalledWith('n1', 'Changed'));
     expect(onChange).toHaveBeenCalledWith([{ ...note, content: 'Changed' }]);
   });
 
   it('deletes a note', async () => {
-    mocked.deleteNote.mockResolvedValue(undefined);
+    vi.mocked(deleteNote).mockResolvedValue(undefined);
     const onChange = vi.fn();
 
     render(<NotesSection applicationId="app-1" notes={[makeNote()]} onChange={onChange} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 
-    await waitFor(() => expect(mocked.deleteNote).toHaveBeenCalledWith('n1'));
+    await waitFor(() => expect(vi.mocked(deleteNote)).toHaveBeenCalledWith('n1'));
     expect(onChange).toHaveBeenCalledWith([]);
   });
 });
@@ -121,7 +86,7 @@ describe('RemindersSection', () => {
 
   it('adds a reminder with title and due date', async () => {
     const created = makeReminder({ id: 'r2', title: 'Send thank-you' });
-    mocked.createReminder.mockResolvedValue(created);
+    vi.mocked(createReminder).mockResolvedValue(created);
     const onChange = vi.fn();
 
     render(<RemindersSection applicationId="app-1" reminders={[]} onChange={onChange} />);
@@ -131,7 +96,7 @@ describe('RemindersSection', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add reminder' }));
 
     await waitFor(() =>
-      expect(mocked.createReminder).toHaveBeenCalledWith('app-1', { title: 'Send thank-you', dueAt: '2026-08-01' })
+      expect(vi.mocked(createReminder)).toHaveBeenCalledWith('app-1', { title: 'Send thank-you', dueAt: '2026-08-01' })
     );
     expect(onChange).toHaveBeenCalledWith([created]);
   });
@@ -139,7 +104,7 @@ describe('RemindersSection', () => {
   it('marks a reminder as completed and shows done state', async () => {
     const reminder = makeReminder();
     const completed = { ...reminder, completedAt: '2026-07-05T00:00:00.000Z' };
-    mocked.updateReminder.mockResolvedValue(completed);
+    vi.mocked(updateReminder).mockResolvedValue(completed);
     const onChange = vi.fn();
 
     render(<RemindersSection applicationId="app-1" reminders={[reminder]} onChange={onChange} />);
@@ -147,7 +112,7 @@ describe('RemindersSection', () => {
     expect(screen.getByText('active')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Complete' }));
 
-    await waitFor(() => expect(mocked.updateReminder).toHaveBeenCalledWith('r1', { completed: true }));
+    await waitFor(() => expect(vi.mocked(updateReminder)).toHaveBeenCalledWith('r1', { completed: true }));
     expect(onChange).toHaveBeenCalledWith([completed]);
   });
 
@@ -171,7 +136,7 @@ describe('RemindersSection', () => {
   it('edits a reminder title and due date', async () => {
     const reminder = makeReminder();
     const updated = { ...reminder, title: 'New title' };
-    mocked.updateReminder.mockResolvedValue(updated);
+    vi.mocked(updateReminder).mockResolvedValue(updated);
     const onChange = vi.fn();
 
     render(<RemindersSection applicationId="app-1" reminders={[reminder]} onChange={onChange} />);
@@ -181,7 +146,7 @@ describe('RemindersSection', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save reminder' }));
 
     await waitFor(() =>
-      expect(mocked.updateReminder).toHaveBeenCalledWith('r1', { title: 'New title', dueAt: '2099-12-31' })
+      expect(vi.mocked(updateReminder)).toHaveBeenCalledWith('r1', { title: 'New title', dueAt: '2099-12-31' })
     );
     expect(onChange).toHaveBeenCalledWith([updated]);
   });
@@ -192,7 +157,7 @@ describe('InterviewsSection', () => {
 
   it('adds an interview with stage and date', async () => {
     const created = makeInterview({ id: 'i2', stage: 'Onsite' });
-    mocked.createInterview.mockResolvedValue(created);
+    vi.mocked(createInterview).mockResolvedValue(created);
     const onChange = vi.fn();
 
     render(<InterviewsSection applicationId="app-1" interviews={[]} onChange={onChange} />);
@@ -202,7 +167,7 @@ describe('InterviewsSection', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add interview' }));
 
     await waitFor(() =>
-      expect(mocked.createInterview).toHaveBeenCalledWith('app-1', {
+      expect(vi.mocked(createInterview)).toHaveBeenCalledWith('app-1', {
         stage: 'Onsite',
         scheduledAt: '2026-07-15T10:00',
         notes: null
@@ -214,7 +179,7 @@ describe('InterviewsSection', () => {
   it('edits an interview stage', async () => {
     const interview = makeInterview();
     const updated = { ...interview, stage: 'Final round' };
-    mocked.updateInterview.mockResolvedValue(updated);
+    vi.mocked(updateInterview).mockResolvedValue(updated);
     const onChange = vi.fn();
 
     render(<InterviewsSection applicationId="app-1" interviews={[interview]} onChange={onChange} />);
@@ -223,19 +188,19 @@ describe('InterviewsSection', () => {
     fireEvent.change(screen.getByLabelText('Edit stage'), { target: { value: 'Final round' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save interview' }));
 
-    await waitFor(() => expect(mocked.updateInterview).toHaveBeenCalled());
+    await waitFor(() => expect(vi.mocked(updateInterview)).toHaveBeenCalled());
     expect(onChange).toHaveBeenCalledWith([updated]);
   });
 
   it('deletes an interview', async () => {
-    mocked.deleteInterview.mockResolvedValue(undefined);
+    vi.mocked(deleteInterview).mockResolvedValue(undefined);
     const onChange = vi.fn();
 
     render(<InterviewsSection applicationId="app-1" interviews={[makeInterview()]} onChange={onChange} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
 
-    await waitFor(() => expect(mocked.deleteInterview).toHaveBeenCalledWith('i1'));
+    await waitFor(() => expect(vi.mocked(deleteInterview)).toHaveBeenCalledWith('i1'));
     expect(onChange).toHaveBeenCalledWith([]);
   });
 });

@@ -43,7 +43,7 @@ describe('Header sign out', () => {
   });
 
   it('signs out and redirects to /login when the button is clicked', async () => {
-    (auth.signOut as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    vi.mocked(auth.signOut).mockResolvedValue(undefined);
 
     renderHeader();
     openUserMenu();
@@ -57,13 +57,7 @@ describe('Header sign out', () => {
   it('disables the button and shows progress text while signing out', async () => {
     let resolveSignOut!: () => void;
 
-    type SignOutFn = () => Promise<void>;
-
-    const signOutMock = auth.signOut as unknown as ReturnType<typeof vi.fn> & {
-      mockImplementation(fn: SignOutFn): void;
-    };
-
-    signOutMock.mockImplementation(() => {
+    vi.mocked(auth.signOut).mockImplementation(() => {
       return new Promise<void>((resolve) => {
         resolveSignOut = resolve;
       });
@@ -82,7 +76,7 @@ describe('Header sign out', () => {
   });
 
   it('still redirects to /login when the logout request fails', async () => {
-    (auth.signOut as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('network down'));
+    vi.mocked(auth.signOut).mockRejectedValue(new Error('network down'));
 
     renderHeader();
     openUserMenu();

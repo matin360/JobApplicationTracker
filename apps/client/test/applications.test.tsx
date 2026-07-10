@@ -5,9 +5,15 @@ import ApplicationsPage from '../src/pages/ApplicationsPage';
 import ApplicationDetailPage from '../src/pages/ApplicationDetailPage';
 import NewApplicationPage from '../src/pages/NewApplicationPage';
 import EditApplicationPage from '../src/pages/EditApplicationPage';
-import * as applications from '../src/api/applications';
-import * as exportApi from '../src/api/export';
-import type { ApplicationDetail } from '../src/api/applications';
+import {
+  createApplication,
+  deleteApplication,
+  getApplication,
+  listApplications,
+  updateApplication
+} from '../src/api/applications';
+import { downloadApplicationsCsv } from '../src/api/export';
+import { makeRecord } from './factories';
 
 vi.mock('../src/api/applications', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../src/api/applications')>()),
@@ -22,35 +28,6 @@ vi.mock('../src/api/export', () => ({
   downloadApplicationsCsv: vi.fn()
 }));
 
-const mocked = {
-  ...(applications as unknown as Record<
-    'listApplications' | 'getApplication' | 'createApplication' | 'updateApplication' | 'deleteApplication',
-    ReturnType<typeof vi.fn>
-  >),
-  downloadApplicationsCsv: exportApi.downloadApplicationsCsv as unknown as ReturnType<typeof vi.fn>
-};
-
-function makeRecord(overrides: Partial<ApplicationDetail>): ApplicationDetail {
-  return {
-    id: 'app-1',
-    company: { id: 'c1', name: 'Acme Corp' },
-    roleTitle: 'Frontend Engineer',
-    location: 'Remote',
-    source: 'LinkedIn',
-    status: 'applied',
-    appliedAt: '2026-07-01T00:00:00.000Z',
-    jobUrl: 'https://acme.example.com/jobs/1',
-    priority: 'high',
-    nextFollowUpAt: null,
-    createdAt: '2026-07-01T00:00:00.000Z',
-    updatedAt: '2026-07-01T00:00:00.000Z',
-    notes: [],
-    reminders: [],
-    interviews: [],
-    ...overrides
-  };
-}
-
 const sampleRecords = [
   makeRecord({ id: 'a1', roleTitle: 'Frontend Engineer', company: { id: 'c1', name: 'Acme' }, status: 'applied' }),
   makeRecord({ id: 'a2', roleTitle: 'Backend Engineer', company: { id: 'c2', name: 'Globex' }, status: 'offer' }),
@@ -60,7 +37,7 @@ const sampleRecords = [
 describe('ApplicationsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocked.listApplications.mockResolvedValue(sampleRecords);
+    vi.mocked(listApplications).mockResolvedValue(sampleRecords);
   });
 
   const renderList = () =>
@@ -102,13 +79,7 @@ describe('ApplicationsPage', () => {
   it('exports a CSV using the current filters', async () => {
     let resolveExport!: () => void;
 
-    type ExportFn = () => Promise<void>;
-
-    const exportMock = mocked.downloadApplicationsCsv as ReturnType<typeof vi.fn> & {
-      mockImplementation(fn: ExportFn): void;
-    };
-
-    exportMock.mockImplementation(() => {
+    vi.mocked(downloadApplicationsCsv).mockImplementation(() => {
       return new Promise<void>((resolve) => {
         resolveExport = resolve;
       });
@@ -123,7 +94,7 @@ describe('ApplicationsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Export CSV' }));
 
     await waitFor(() =>
-      expect(mocked.downloadApplicationsCsv).toHaveBeenCalledWith({
+      expect(vi.mocked(downloadApplicationsCsv)).toHaveBeenCalledWith({
         statuses: ['offer'],
         from: '2026-06-01',
         to: undefined
@@ -139,7 +110,7 @@ describe('ApplicationsPage', () => {
   });
 
   it('shows an error when the export fails', async () => {
-    mocked.downloadApplicationsCsv.mockRejectedValue(new Error('Export failed. (500 Internal Server Error)'));
+    vi.mocked(downloadApplicationsCsv).mockRejectedValue(new Error('Export failed. (500 Internal Server Error)'));
 
     renderList();
     await screen.findByRole('cell', { name: 'Acme' });
@@ -185,7 +156,7 @@ describe('NewApplicationPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
     expect(await screen.findByText('Role title is required.')).toBeInTheDocument();
-    expect(mocked.createApplication).not.toHaveBeenCalled();
+    expect(vi.mocked(createApplication)).not.toHaveBeenCalled();
   });
 
   it('validates the job URL', async () => {
@@ -196,11 +167,11 @@ describe('NewApplicationPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
     expect(await screen.findByText('Job URL must be a valid http(s) URL.')).toBeInTheDocument();
-    expect(mocked.createApplication).not.toHaveBeenCalled();
+    expect(vi.mocked(createApplication)).not.toHaveBeenCalled();
   });
 
   it('creates the application and navigates to its detail page', async () => {
-    mocked.createApplication.mockResolvedValue(makeRecord({ id: 'created-1' }));
+    vi.mocked(createApplication).mockResolvedValue(makeRecord({ id: 'created-1' }));
 
     renderNew();
 
@@ -210,7 +181,7 @@ describe('NewApplicationPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create' }));
 
     await waitFor(() =>
-      expect(mocked.createApplication).toHaveBeenCalledWith(
+      expect(vi.mocked(createApplication)).toHaveBeenCalledWith(
         expect.objectContaining({ company: 'Acme', roleTitle: 'Engineer', status: 'applied' })
       )
     );
@@ -218,7 +189,7 @@ describe('NewApplicationPage', () => {
   });
 
   it('shows the server error when creation fails', async () => {
-    mocked.createApplication.mockRejectedValue(new Error('Status must be one of: saved, applied.'));
+    vi.mocked(createApplication).mockRejectedValue(new Error('Status must be one of: saved, applied.'));
 
     renderNew();
 
@@ -232,7 +203,7 @@ describe('NewApplicationPage', () => {
 describe('ApplicationDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocked.getApplication.mockResolvedValue(makeRecord({ id: 'a1' }));
+    vi.mocked(getApplication).mockResolvedValue(makeRecord({ id: 'a1' }));
   });
 
   const renderDetail = () =>
@@ -254,17 +225,17 @@ describe('ApplicationDetailPage', () => {
   });
 
   it('requires confirmation before deleting, then navigates back to the list', async () => {
-    mocked.deleteApplication.mockResolvedValue(undefined);
+    vi.mocked(deleteApplication).mockResolvedValue(undefined);
 
     renderDetail();
     await screen.findByRole('heading', { name: 'Frontend Engineer' });
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
-    expect(mocked.deleteApplication).not.toHaveBeenCalled();
+    expect(vi.mocked(deleteApplication)).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Confirm delete' }));
 
-    await waitFor(() => expect(mocked.deleteApplication).toHaveBeenCalledWith('a1'));
+    await waitFor(() => expect(vi.mocked(deleteApplication)).toHaveBeenCalledWith('a1'));
     expect(await screen.findByText('List marker')).toBeInTheDocument();
   });
 
@@ -276,11 +247,11 @@ describe('ApplicationDetailPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
     expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
-    expect(mocked.deleteApplication).not.toHaveBeenCalled();
+    expect(vi.mocked(deleteApplication)).not.toHaveBeenCalled();
   });
 
   it('shows an error when the application cannot be loaded', async () => {
-    mocked.getApplication.mockRejectedValue(new Error('Not found'));
+    vi.mocked(getApplication).mockRejectedValue(new Error('Not found'));
 
     renderDetail();
 
@@ -292,7 +263,7 @@ describe('ApplicationDetailPage', () => {
 describe('EditApplicationPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocked.getApplication.mockResolvedValue(makeRecord({ id: 'a1' }));
+    vi.mocked(getApplication).mockResolvedValue(makeRecord({ id: 'a1' }));
   });
 
   const renderEdit = () =>
@@ -306,7 +277,7 @@ describe('EditApplicationPage', () => {
     );
 
   it('prefills the form with existing data and saves changes', async () => {
-    mocked.updateApplication.mockResolvedValue(makeRecord({ id: 'a1', status: 'offer' }));
+    vi.mocked(updateApplication).mockResolvedValue(makeRecord({ id: 'a1', status: 'offer' }));
 
     renderEdit();
 
@@ -319,7 +290,7 @@ describe('EditApplicationPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
 
     await waitFor(() =>
-      expect(mocked.updateApplication).toHaveBeenCalledWith('a1', expect.objectContaining({ status: 'offer' }))
+      expect(vi.mocked(updateApplication)).toHaveBeenCalledWith('a1', expect.objectContaining({ status: 'offer' }))
     );
     expect(await screen.findByText('Detail marker')).toBeInTheDocument();
   });

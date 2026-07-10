@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import DashboardPage from '../src/pages/DashboardPage';
-import * as dashboard from '../src/dashboard';
-import * as children from '../src/api/children';
-import type { DashboardSummary } from '../src/dashboard';
+import { getDashboardSummary } from '../src/dashboard';
+import { updateReminder } from '../src/api/children';
+import { makeReminder, makeSummary } from './factories';
 
 vi.mock('../src/dashboard', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../src/dashboard')>()),
@@ -16,37 +16,8 @@ vi.mock('../src/api/children', async (importOriginal) => ({
   updateReminder: vi.fn()
 }));
 
-const getSummaryMock = dashboard.getDashboardSummary as unknown as ReturnType<typeof vi.fn>;
-const updateReminderMock = children.updateReminder as unknown as ReturnType<typeof vi.fn>;
-
-function makeSummary(overrides: Partial<DashboardSummary> = {}): DashboardSummary {
-  return {
-    statusCounts: { saved: 1, applied: 4, interviewing: 2, offer: 1, rejected: 3, withdrawn: 0 },
-    reminders: {
-      active: 3,
-      upcoming: 1,
-      upcomingList: [
-        {
-          id: 'rem-1',
-          title: 'Send thank-you email',
-          dueAt: '2026-07-12T00:00:00.000Z',
-          application: { id: 'app-1', roleTitle: 'Frontend Engineer', companyName: 'Acme' }
-        }
-      ]
-    },
-    recentApplications: [
-      {
-        id: 'app-1',
-        companyName: 'Acme',
-        roleTitle: 'Frontend Engineer',
-        status: 'applied',
-        appliedAt: '2026-07-01T00:00:00.000Z',
-        nextFollowUpAt: null
-      }
-    ],
-    ...overrides
-  };
-}
+const getSummaryMock = vi.mocked(getDashboardSummary);
+const updateReminderMock = vi.mocked(updateReminder);
 
 const renderDashboard = () =>
   render(
@@ -93,7 +64,7 @@ describe('DashboardPage', () => {
       .mockResolvedValueOnce(
         makeSummary({ reminders: { active: 2, upcoming: 0, upcomingList: [] } })
       );
-    updateReminderMock.mockResolvedValue({});
+    updateReminderMock.mockResolvedValue(makeReminder());
 
     renderDashboard();
     await screen.findByText('Send thank-you email');

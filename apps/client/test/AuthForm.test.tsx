@@ -18,7 +18,7 @@ describe('AuthForm', () => {
 
   it('renders login form and submits sign in', async () => {
     const fakeUser = { id: '1', email: 'user@example.com', name: 'User' };
-    (auth.signIn as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ user: fakeUser, session: { expiresAt: new Date().toISOString() } });
+    vi.mocked(auth.signIn).mockResolvedValue({ user: fakeUser, session: { expiresAt: new Date().toISOString() } });
     const onSuccess = vi.fn();
 
     render(<AuthForm mode="login" onSuccess={onSuccess} />);
@@ -33,7 +33,7 @@ describe('AuthForm', () => {
 
   it('renders signup form and submits sign up', async () => {
     const fakeUser = { id: '2', email: 'new@example.com', name: 'New User' };
-    (auth.signUp as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ user: fakeUser, session: { expiresAt: new Date().toISOString() } });
+    vi.mocked(auth.signUp).mockResolvedValue({ user: fakeUser, session: { expiresAt: new Date().toISOString() } });
     const onSuccess = vi.fn();
 
     render(<AuthForm mode="signup" onSuccess={onSuccess} />);
