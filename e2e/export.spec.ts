@@ -1,12 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import fs from 'node:fs/promises';
-import { makeTestUser, signUpViaApi } from './helpers';
-
-async function seedApplication(page: Page, data: Record<string, unknown>): Promise<void> {
-  const response = await page.request.post('/api/applications', { data });
-  expect(response.status()).toBe(201);
-}
+import { makeTestUser, seedApplication, signUpViaApi } from './helpers';
 
 async function clickExportAndRead(page: Page): Promise<string> {
   const downloadPromise = page.waitForEvent('download');

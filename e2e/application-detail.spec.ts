@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { makeTestUser, signUpViaApi } from './helpers';
+import { makeTestUser, section, seedApplication, signUpViaApi } from './helpers';
 
 // Sign up a fresh user, create an application via the API, and open its detail page.
 async function openFreshDetailPage(page: Page, label: string): Promise<string> {
@@ -8,21 +8,15 @@ async function openFreshDetailPage(page: Page, label: string): Promise<string> {
   await page.goto('/login');
   await signUpViaApi(page, user);
 
-  const response = await page.request.post('/api/applications', {
-    data: { company: 'Acme Corp', roleTitle: `Role ${label}`, status: 'interviewing' }
+  const applicationId = await seedApplication(page, {
+    company: 'Acme Corp',
+    roleTitle: `Role ${label}`,
+    status: 'interviewing'
   });
-  expect(response.status()).toBe(201);
-  const { application } = (await response.json()) as { application: { id: string } };
 
-  await page.goto(`/applications/${application.id}`);
+  await page.goto(`/applications/${applicationId}`);
   await expect(page.getByRole('heading', { name: `Role ${label}` })).toBeVisible();
-  return application.id;
-}
-
-// Scope queries to one section card so they never collide with the
-// application-level Edit/Delete buttons or the activity timeline.
-function section(page: Page, title: string) {
-  return page.locator('section.ui-card', { has: page.getByRole('heading', { name: title }) });
+  return applicationId;
 }
 
 test.describe('application detail workspace', () => {

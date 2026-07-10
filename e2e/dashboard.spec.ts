@@ -1,21 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { Page } from '@playwright/test';
-import { makeTestUser, signUpViaApi } from './helpers';
-
-function section(page: Page, title: string) {
-  return page.locator('section.ui-card', { has: page.getByRole('heading', { name: title }) });
-}
-
-// Create an application via the API and return its id.
-async function seedApplication(
-  page: Page,
-  fields: { company?: string; roleTitle: string; status?: string; appliedAt?: string }
-): Promise<string> {
-  const response = await page.request.post('/api/applications', { data: fields });
-  expect(response.status()).toBe(201);
-  const { application } = (await response.json()) as { application: { id: string } };
-  return application.id;
-}
+import { makeTestUser, section, seedApplication, signUpViaApi } from './helpers';
 
 test.describe('dashboard', () => {
   test('shows status counts, chart, upcoming reminders, and recent applications', async ({ page }) => {

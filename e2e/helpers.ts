@@ -29,3 +29,17 @@ export async function signUpViaApi(page: Page, user: TestUser): Promise<void> {
   });
   expect(response.status(), 'signup should succeed').toBe(201);
 }
+
+// Create an application through the API for the signed-in session; returns its id.
+export async function seedApplication(page: Page, fields: Record<string, unknown>): Promise<string> {
+  const response = await page.request.post('/api/applications', { data: fields });
+  expect(response.status(), 'seeding an application should succeed').toBe(201);
+  const { application } = (await response.json()) as { application: { id: string } };
+  return application.id;
+}
+
+// Scope queries to one section card (by its heading) so they never collide with
+// same-named buttons or text elsewhere on the page.
+export function section(page: Page, title: string) {
+  return page.locator('section.ui-card', { has: page.getByRole('heading', { name: title }) });
+}
