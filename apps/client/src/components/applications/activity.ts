@@ -1,4 +1,4 @@
-import type { ApplicationDetail } from '../../applications';
+import type { ApplicationDetail } from '../../api/applications';
 
 export interface ActivityEvent {
   when: string;

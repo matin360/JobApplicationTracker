@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { createInterview, deleteInterview, updateInterview } from '../../applications';
-import type { InterviewRecord } from '../../applications';
+import { createInterview, deleteInterview, updateInterview } from '../../api/children';
+import type { InterviewRecord } from '../../api/children';
 import { formatDateTime, toDateTimeInputValue } from './format';
 import Button from '../ui/Button';
 import Card from '../ui/Card';

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { APPLICATION_STATUSES } from '../../applications';
-import type { ApplicationStatus } from '../../applications';
+import { APPLICATION_STATUSES } from '../../api/applications';
+import type { ApplicationStatus } from '../../api/applications';
 
 interface StatusChartProps {
   statusCounts: Record<ApplicationStatus, number>;

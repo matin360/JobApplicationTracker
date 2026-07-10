@@ -1,6 +1,6 @@
 import Badge from '../ui/Badge';
 import type { BadgeTone } from '../ui/Badge';
-import type { ApplicationStatus } from '../../applications';
+import type { ApplicationStatus } from '../../api/applications';
 
 const statusTone: Record<ApplicationStatus, BadgeTone> = {
   saved: 'neutral',

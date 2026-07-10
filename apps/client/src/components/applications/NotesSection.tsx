@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { createNote, deleteNote, updateNote } from '../../applications';
-import type { NoteRecord } from '../../applications';
+import { createNote, deleteNote, updateNote } from '../../api/children';
+import type { NoteRecord } from '../../api/children';
 import { formatDateTime } from './format';
 import Button from '../ui/Button';
 import Card from '../ui/Card';

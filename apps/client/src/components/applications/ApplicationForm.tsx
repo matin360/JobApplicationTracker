@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { APPLICATION_PRIORITIES, APPLICATION_STATUSES } from '../../applications';
-import type { ApplicationInput, ApplicationPriority, ApplicationRecord, ApplicationStatus } from '../../applications';
+import { APPLICATION_PRIORITIES, APPLICATION_STATUSES } from '../../api/applications';
+import type { ApplicationInput, ApplicationPriority, ApplicationRecord, ApplicationStatus } from '../../api/applications';
 import { toDateInputValue } from './format';
 import Button from '../ui/Button';
 import Form from '../ui/Form';

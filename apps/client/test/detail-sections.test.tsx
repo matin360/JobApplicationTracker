@@ -4,11 +4,12 @@ import NotesSection from '../src/components/applications/NotesSection';
 import RemindersSection from '../src/components/applications/RemindersSection';
 import InterviewsSection from '../src/components/applications/InterviewsSection';
 import { buildActivity } from '../src/components/applications/activity';
-import * as applications from '../src/applications';
-import type { ApplicationDetail, InterviewRecord, NoteRecord, ReminderRecord } from '../src/applications';
+import * as children from '../src/api/children';
+import type { ApplicationDetail } from '../src/api/applications';
+import type { InterviewRecord, NoteRecord, ReminderRecord } from '../src/api/children';
 
-vi.mock('../src/applications', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../src/applications')>()),
+vi.mock('../src/api/children', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../src/api/children')>()),
   createNote: vi.fn(),
   updateNote: vi.fn(),
   deleteNote: vi.fn(),
@@ -20,7 +21,7 @@ vi.mock('../src/applications', async (importOriginal) => ({
   deleteInterview: vi.fn()
 }));
 
-const mocked = applications as unknown as Record<
+const mocked = children as unknown as Record<
   | 'createNote'
   | 'updateNote'
   | 'deleteNote'

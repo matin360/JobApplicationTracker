@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { createApplication } from '../applications';
+import { createApplication } from '../api/applications';
 import ApplicationForm from '../components/applications/ApplicationForm';
 import Card from '../components/ui/Card';
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { getApplication, updateApplication } from '../applications';
-import type { ApplicationRecord } from '../applications';
+import { getApplication, updateApplication } from '../api/applications';
+import type { ApplicationRecord } from '../api/applications';
 import ApplicationForm from '../components/applications/ApplicationForm';
 import Card from '../components/ui/Card';
 

@@ -5,46 +5,30 @@ import ApplicationsPage from '../src/pages/ApplicationsPage';
 import ApplicationDetailPage from '../src/pages/ApplicationDetailPage';
 import NewApplicationPage from '../src/pages/NewApplicationPage';
 import EditApplicationPage from '../src/pages/EditApplicationPage';
-import * as applications from '../src/applications';
-import type { ApplicationDetail } from '../src/applications';
+import * as applications from '../src/api/applications';
+import * as exportApi from '../src/api/export';
+import type { ApplicationDetail } from '../src/api/applications';
 
-vi.mock('../src/applications', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../src/applications')>()),
+vi.mock('../src/api/applications', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../src/api/applications')>()),
   listApplications: vi.fn(),
   getApplication: vi.fn(),
   createApplication: vi.fn(),
   updateApplication: vi.fn(),
-  deleteApplication: vi.fn(),
-  downloadApplicationsCsv: vi.fn(),
-  createNote: vi.fn(),
-  updateNote: vi.fn(),
-  deleteNote: vi.fn(),
-  createReminder: vi.fn(),
-  updateReminder: vi.fn(),
-  deleteReminder: vi.fn(),
-  createInterview: vi.fn(),
-  updateInterview: vi.fn(),
-  deleteInterview: vi.fn()
+  deleteApplication: vi.fn()
 }));
 
-const mocked = applications as unknown as Record<
-  | 'listApplications'
-  | 'getApplication'
-  | 'createApplication'
-  | 'updateApplication'
-  | 'deleteApplication'
-  | 'downloadApplicationsCsv'
-  | 'createNote'
-  | 'updateNote'
-  | 'deleteNote'
-  | 'createReminder'
-  | 'updateReminder'
-  | 'deleteReminder'
-  | 'createInterview'
-  | 'updateInterview'
-  | 'deleteInterview',
-  ReturnType<typeof vi.fn>
->;
+vi.mock('../src/api/export', () => ({
+  downloadApplicationsCsv: vi.fn()
+}));
+
+const mocked = {
+  ...(applications as unknown as Record<
+    'listApplications' | 'getApplication' | 'createApplication' | 'updateApplication' | 'deleteApplication',
+    ReturnType<typeof vi.fn>
+  >),
+  downloadApplicationsCsv: exportApi.downloadApplicationsCsv as unknown as ReturnType<typeof vi.fn>
+};
 
 function makeRecord(overrides: Partial<ApplicationDetail>): ApplicationDetail {
   return {

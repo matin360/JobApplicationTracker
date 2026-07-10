@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { updateReminder } from '../applications';
+import { updateReminder } from '../api/children';
 import { getDashboardSummary } from '../dashboard';
 import type { DashboardSummary } from '../dashboard';
-import { APPLICATION_STATUSES } from '../applications';
+import { APPLICATION_STATUSES } from '../api/applications';
 import StatusBadge from '../components/applications/StatusBadge';
 import { formatDate } from '../components/applications/format';
 import StatusChart from '../components/dashboard/StatusChart';

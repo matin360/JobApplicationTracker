@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { createReminder, deleteReminder, updateReminder } from '../../applications';
-import type { ReminderRecord } from '../../applications';
+import { createReminder, deleteReminder, updateReminder } from '../../api/children';
+import type { ReminderRecord } from '../../api/children';
 import { formatDate, toDateInputValue } from './format';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';

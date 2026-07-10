@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { deleteApplication, getApplication } from '../applications';
-import type { ApplicationDetail } from '../applications';
+import { deleteApplication, getApplication } from '../api/applications';
+import type { ApplicationDetail } from '../api/applications';
 import ActivityTimeline from '../components/applications/ActivityTimeline';
 import InterviewsSection from '../components/applications/InterviewsSection';
 import NotesSection from '../components/applications/NotesSection';

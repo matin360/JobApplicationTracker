@@ -16,13 +16,7 @@ export interface AuthResponse {
   };
 }
 
-// When VITE_API_URL is defined, use it; otherwise rely on a relative path.
-// Relative paths let Vite proxy backend requests during local development.
-const apiBaseUrl = import.meta.env.VITE_API_URL ?? '';
-
-function buildApiUrl(path: string) {
-  return apiBaseUrl ? `${apiBaseUrl}${path}` : path;
-}
+import { buildApiUrl } from './api/http';
 
 // Returns the currently signed-in user or null if not authenticated.
 export async function getCurrentUser(): Promise<AuthUser | null> {

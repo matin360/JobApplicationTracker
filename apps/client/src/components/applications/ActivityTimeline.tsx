@@ -1,4 +1,4 @@
-import type { ApplicationDetail } from '../../applications';
+import type { ApplicationDetail } from '../../api/applications';
 import { buildActivity } from './activity';
 import { formatDateTime } from './format';
 import Card from '../ui/Card';

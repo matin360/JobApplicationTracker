@@ -16,8 +16,8 @@ vi.mock('../src/auth', () => ({
   signOut: vi.fn()
 }));
 
-vi.mock('../src/applications', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../src/applications')>()),
+vi.mock('../src/api/applications', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../src/api/applications')>()),
   listApplications: vi.fn().mockResolvedValue([]),
   getApplication: vi.fn(),
   createApplication: vi.fn(),

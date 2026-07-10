@@ -1,4 +1,5 @@
-import type { ApplicationStatus } from './applications';
+import { requestJson } from './api/http';
+import type { ApplicationStatus } from './api/applications';
 
 export interface UpcomingReminder {
   id: string;
@@ -31,14 +32,6 @@ export interface DashboardSummary {
   recentApplications: RecentApplication[];
 }
 
-const apiBaseUrl = import.meta.env.VITE_API_URL ?? '';
-
 export async function getDashboardSummary(): Promise<DashboardSummary> {
-  const response = await fetch(`${apiBaseUrl}/api/dashboard/summary`, { credentials: 'include' });
-
-  if (!response.ok) {
-    throw new Error(`Failed to load the dashboard. (${response.status} ${response.statusText})`);
-  }
-
-  return (await response.json()) as DashboardSummary;
+  return requestJson<DashboardSummary>('/api/dashboard/summary');
 }

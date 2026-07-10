@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { APPLICATION_STATUSES, downloadApplicationsCsv, listApplications } from '../applications';
-import type { ApplicationRecord, ApplicationStatus } from '../applications';
+import { APPLICATION_STATUSES, listApplications } from '../api/applications';
+import { downloadApplicationsCsv } from '../api/export';
+import type { ApplicationRecord, ApplicationStatus } from '../api/applications';
 import StatusBadge from '../components/applications/StatusBadge';
 import { formatDate } from '../components/applications/format';
 import Button from '../components/ui/Button';

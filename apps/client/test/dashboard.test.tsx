@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import DashboardPage from '../src/pages/DashboardPage';
 import * as dashboard from '../src/dashboard';
-import * as applications from '../src/applications';
+import * as children from '../src/api/children';
 import type { DashboardSummary } from '../src/dashboard';
 
 vi.mock('../src/dashboard', async (importOriginal) => ({
@@ -11,13 +11,13 @@ vi.mock('../src/dashboard', async (importOriginal) => ({
   getDashboardSummary: vi.fn()
 }));
 
-vi.mock('../src/applications', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../src/applications')>()),
+vi.mock('../src/api/children', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../src/api/children')>()),
   updateReminder: vi.fn()
 }));
 
 const getSummaryMock = dashboard.getDashboardSummary as unknown as ReturnType<typeof vi.fn>;
-const updateReminderMock = applications.updateReminder as unknown as ReturnType<typeof vi.fn>;
+const updateReminderMock = children.updateReminder as unknown as ReturnType<typeof vi.fn>;
 
 function makeSummary(overrides: Partial<DashboardSummary> = {}): DashboardSummary {
   return {
