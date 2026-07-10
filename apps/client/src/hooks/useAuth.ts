@@ -1,44 +1,16 @@
-import { useEffect, useState } from 'react';
-import type { AuthUser } from '../auth';
-import { getCurrentUser } from '../auth';
+import { useContext } from 'react';
+import { AuthContext } from './auth-context';
+import type { AuthStatus } from './auth-context';
 
-export interface AuthStatus {
-  user: AuthUser | null;
-  loading: boolean;
-  authenticated: boolean;
-}
+export type { AuthStatus } from './auth-context';
 
-const useAuth = () => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    // Load the current authenticated user once when the hook mounts.
-    const loadUser = async () => {
-      const currentUser = await getCurrentUser();
-      if (!isMounted) {
-        return;
-      }
-
-      setUser(currentUser);
-      setLoading(false);
-    };
-
-    void loadUser();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  return {
-    user,
-    loading,
-    // Derive authenticated state from whether a user object exists.
-    authenticated: Boolean(user)
-  } satisfies AuthStatus;
+// Read the shared auth state provided by <AuthProvider>.
+const useAuth = (): AuthStatus => {
+  const value = useContext(AuthContext);
+  if (!value) {
+    throw new Error('useAuth must be used within <AuthProvider>.');
+  }
+  return value;
 };
 
 export default useAuth;

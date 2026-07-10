@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { updateReminder } from '../api/children';
 import { getDashboardSummary } from '../dashboard';
@@ -12,6 +12,7 @@ import Card from '../components/ui/Card';
 import Table from '../components/ui/Table';
 import type { TableColumn } from '../components/ui/Table';
 import type { RecentApplication, UpcomingReminder } from '../dashboard';
+import { useAsync } from '../hooks/useAsync';
 
 const recentColumns: TableColumn<RecentApplication>[] = [
   {
@@ -30,33 +31,20 @@ const recentColumns: TableColumn<RecentApplication>[] = [
 ];
 
 const DashboardPage = () => {
-  const [summary, setSummary] = useState<DashboardSummary | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data: summary, loading, error: loadError, reload } = useAsync<DashboardSummary>(getDashboardSummary);
+  const [actionError, setActionError] = useState('');
   const [completingId, setCompletingId] = useState<string | null>(null);
 
-  const loadSummary = useCallback(async () => {
-    try {
-      setSummary(await getDashboardSummary());
-      setError('');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load the dashboard.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadSummary();
-  }, [loadSummary]);
+  const error = loadError || actionError;
 
   const handleCompleteReminder = async (reminder: UpcomingReminder) => {
     setCompletingId(reminder.id);
+    setActionError('');
     try {
       await updateReminder(reminder.id, { completed: true });
-      await loadSummary();
+      await reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to complete the reminder.');
+      setActionError(err instanceof Error ? err.message : 'Failed to complete the reminder.');
     } finally {
       setCompletingId(null);
     }
@@ -70,7 +58,7 @@ const DashboardPage = () => {
     return (
       <>
         <p className="form-error">{error || 'Failed to load the dashboard.'}</p>
-        <Button variant="secondary" onClick={() => { setLoading(true); void loadSummary(); }}>
+        <Button variant="secondary" onClick={() => { setActionError(''); void reload(); }}>
           Retry
         </Button>
       </>

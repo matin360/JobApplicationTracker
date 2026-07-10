@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { deleteApplication, getApplication } from '../api/applications';
-import type { ApplicationDetail } from '../api/applications';
+import { deleteApplication } from '../api/applications';
 import ActivityTimeline from '../components/applications/ActivityTimeline';
 import InterviewsSection from '../components/applications/InterviewsSection';
 import NotesSection from '../components/applications/NotesSection';
@@ -11,44 +10,17 @@ import { formatDate } from '../components/applications/format';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
+import { useApplication } from '../hooks/useApplication';
 
 const ApplicationDetailPage = () => {
   const { applicationId } = useParams<{ applicationId: string }>();
-  const [application, setApplication] = useState<ApplicationDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data: application, loading, error: loadError, setData: setApplication } = useApplication(applicationId);
+  const [actionError, setActionError] = useState('');
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!applicationId) {
-      return;
-    }
-
-    let isMounted = true;
-
-    getApplication(applicationId)
-      .then((record) => {
-        if (isMounted) {
-          setApplication(record);
-        }
-      })
-      .catch((err: unknown) => {
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : 'Failed to load the application.');
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [applicationId]);
+  const error = loadError || actionError;
 
   const handleDelete = async () => {
     if (!applicationId) {
@@ -60,7 +32,7 @@ const ApplicationDetailPage = () => {
       await deleteApplication(applicationId);
       void navigate('/applications');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete the application.');
+      setActionError(err instanceof Error ? err.message : 'Failed to delete the application.');
       setDeleting(false);
       setConfirmingDelete(false);
     }

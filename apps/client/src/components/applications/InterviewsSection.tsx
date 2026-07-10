@@ -6,6 +6,7 @@ import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Input from '../ui/Input';
 import Textarea from '../ui/Textarea';
+import { useBusyAction } from '../../hooks/useBusyAction';
 
 interface InterviewsSectionProps {
   applicationId: string;
@@ -26,20 +27,7 @@ const InterviewsSection = ({ applicationId, interviews, onChange }: InterviewsSe
   const [editStage, setEditStage] = useState('');
   const [editScheduledAt, setEditScheduledAt] = useState('');
   const [editNotes, setEditNotes] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-
-  const run = async (action: () => Promise<void>) => {
-    setBusy(true);
-    setError('');
-    try {
-      await action();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.');
-    } finally {
-      setBusy(false);
-    }
-  };
+  const { busy, error, run } = useBusyAction();
 
   const handleAdd = () =>
     run(async () => {

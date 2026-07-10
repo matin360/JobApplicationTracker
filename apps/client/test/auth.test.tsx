@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import AuthProvider from '../src/components/AuthProvider';
 import useAuth from '../src/hooks/useAuth';
 import * as auth from '../src/auth';
 
@@ -20,11 +21,18 @@ describe('useAuth', () => {
     );
   };
 
+  const renderWithProvider = () =>
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
+
   it('returns an authenticated user when getCurrentUser resolves', async () => {
     const fakeUser = { id: '1', email: 'user@example.com', name: 'User' };
     (auth.getCurrentUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(fakeUser);
 
-    render(<TestComponent />);
+    renderWithProvider();
 
     await waitFor(() => expect(screen.getByText(/user@example.com/i)).toBeInTheDocument());
     expect(screen.getByText(/loaded/i)).toBeInTheDocument();
@@ -34,7 +42,7 @@ describe('useAuth', () => {
   it('returns unauthenticated when getCurrentUser returns null', async () => {
     (auth.getCurrentUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
-    render(<TestComponent />);
+    renderWithProvider();
 
     await waitFor(() => expect(screen.getByText(/null/i)).toBeInTheDocument());
     expect(screen.getByText(/loaded/i)).toBeInTheDocument();

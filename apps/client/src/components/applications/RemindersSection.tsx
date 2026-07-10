@@ -6,6 +6,7 @@ import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Input from '../ui/Input';
+import { useBusyAction } from '../../hooks/useBusyAction';
 
 interface RemindersSectionProps {
   applicationId: string;
@@ -29,20 +30,7 @@ const RemindersSection = ({ applicationId, reminders, onChange }: RemindersSecti
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editDueAt, setEditDueAt] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-
-  const run = async (action: () => Promise<void>) => {
-    setBusy(true);
-    setError('');
-    try {
-      await action();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.');
-    } finally {
-      setBusy(false);
-    }
-  };
+  const { busy, error, run } = useBusyAction();
 
   const replace = (updated: ReminderRecord) =>
     onChange(reminders.map((reminder) => (reminder.id === updated.id ? updated : reminder)));

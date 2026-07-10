@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { APPLICATION_STATUSES, listApplications } from '../api/applications';
 import { downloadApplicationsCsv } from '../api/export';
@@ -10,6 +10,8 @@ import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import Table from '../components/ui/Table';
 import type { TableColumn, TableSort } from '../components/ui/Table';
+import { useAsync } from '../hooks/useAsync';
+import { useBusyAction } from '../hooks/useBusyAction';
 
 const columns: TableColumn<ApplicationRecord>[] = [
   {
@@ -51,57 +53,26 @@ function compareValues(a: ApplicationRecord, b: ApplicationRecord, key: string):
 }
 
 const ApplicationsPage = () => {
-  const [applications, setApplications] = useState<ApplicationRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { data, loading, error: loadError } = useAsync(() => listApplications());
+  const { busy: exporting, error: exportError, run: runExport } = useBusyAction();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [appliedFrom, setAppliedFrom] = useState('');
   const [appliedTo, setAppliedTo] = useState('');
   const [sort, setSort] = useState<TableSort | undefined>(undefined);
-  const [exporting, setExporting] = useState(false);
   const navigate = useNavigate();
 
-  const handleExport = async () => {
-    setExporting(true);
-    setError('');
-    try {
-      await downloadApplicationsCsv({
+  const applications = useMemo(() => data ?? [], [data]);
+  const error = loadError || exportError;
+
+  const handleExport = () =>
+    runExport(() =>
+      downloadApplicationsCsv({
         statuses: statusFilter === 'all' ? undefined : [statusFilter as ApplicationStatus],
         from: appliedFrom || undefined,
         to: appliedTo || undefined
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Export failed.');
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  useEffect(() => {
-    let isMounted = true;
-
-    listApplications()
-      .then((records) => {
-        if (isMounted) {
-          setApplications(records);
-        }
       })
-      .catch((err: unknown) => {
-        if (isMounted) {
-          setError(err instanceof Error ? err.message : 'Failed to load applications.');
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    );
 
   const visibleApplications = useMemo(() => {
     const query = search.trim().toLowerCase();
