@@ -186,5 +186,5 @@ jobs:
       - name: Type check client
         run: npx tsc -b apps/client
 
-      - name: Type check server
-        run: npx tsc -p apps/server/tsconfig.json
+      - name: Type check server (src + tests)
+        run: npx tsc -p apps/server/tsconfig.eslint.json --noEmit

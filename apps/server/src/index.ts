@@ -25,11 +25,9 @@ import {
 } from './children';
 import {
   requireApplicationOwnership,
-  requireCompanyOwnership,
   requireInterviewOwnership,
   requireNoteOwnership,
-  requireReminderOwnership,
-  requireResumeOwnership
+  requireReminderOwnership
 } from './authorization';
 
 const app = express();
@@ -61,26 +59,6 @@ app.get('/api/auth/me', asyncHandler(requireAuth), asyncHandler(me));
 
 app.get('/api/dashboard/summary', asyncHandler(requireAuth), asyncHandler(getDashboardSummary));
 
-app.get('/api/companies', asyncHandler(requireAuth), (_req, res) => {
-  res.json({ companies: [] });
-});
-
-app.post('/api/companies', asyncHandler(requireAuth), (_req, res) => {
-  res.status(201).json({ company: null });
-});
-
-app.get('/api/companies/:companyId', asyncHandler(requireAuth), asyncHandler(requireCompanyOwnership()), (_req, res) => {
-  res.json({ company: null });
-});
-
-app.patch('/api/companies/:companyId', asyncHandler(requireAuth), asyncHandler(requireCompanyOwnership()), (_req, res) => {
-  res.json({ company: null });
-});
-
-app.delete('/api/companies/:companyId', asyncHandler(requireAuth), asyncHandler(requireCompanyOwnership()), (_req, res) => {
-  res.status(204).send();
-});
-
 app.get('/api/applications', asyncHandler(requireAuth), asyncHandler(listApplications));
 
 // Must be registered before /api/applications/:applicationId so "export" is not read as an id.
@@ -111,22 +89,6 @@ app.post('/api/applications/:applicationId/interviews', asyncHandler(requireAuth
 app.patch('/api/interviews/:interviewId', asyncHandler(requireAuth), asyncHandler(requireInterviewOwnership()), asyncHandler(updateInterview));
 
 app.delete('/api/interviews/:interviewId', asyncHandler(requireAuth), asyncHandler(requireInterviewOwnership()), asyncHandler(deleteInterview));
-
-app.get('/api/resumes', asyncHandler(requireAuth), (_req, res) => {
-  res.json({ resumes: [] });
-});
-
-app.post('/api/resumes', asyncHandler(requireAuth), (_req, res) => {
-  res.status(201).json({ resume: null });
-});
-
-app.patch('/api/resumes/:resumeId', asyncHandler(requireAuth), asyncHandler(requireResumeOwnership()), (_req, res) => {
-  res.json({ resume: null });
-});
-
-app.delete('/api/resumes/:resumeId', asyncHandler(requireAuth), asyncHandler(requireResumeOwnership()), (_req, res) => {
-  res.status(204).send();
-});
 
 // Terminal error middleware — must be registered after every route.
 app.use(errorHandler);

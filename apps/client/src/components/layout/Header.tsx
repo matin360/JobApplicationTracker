@@ -39,6 +39,8 @@ const Header = ({ user, navOpen, onToggleNav }: HeaderProps) => {
       // Even if the logout request fails, fall through to the login page;
       // the session cookie is HttpOnly so the server remains the source of truth.
     } finally {
+      // Full page load on purpose: it re-runs AuthProvider so every consumer
+      // drops the stale session. Don't "fix" this to navigate().
       window.location.assign('/login');
     }
   };

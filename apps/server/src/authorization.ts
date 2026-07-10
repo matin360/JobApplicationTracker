@@ -30,20 +30,6 @@ export function requireResourceOwnership(
   };
 }
 
-export const requireCompanyOwnership = () =>
-  requireResourceOwnership(async (request, userId) => {
-    const companyId = getRouteParam(request, 'companyId');
-    if (!companyId) {
-      return false;
-    }
-
-    const company = await prisma.company.findFirst({
-      where: { id: companyId, userId }
-    });
-
-    return Boolean(company);
-  });
-
 export const requireApplicationOwnership = () =>
   requireResourceOwnership(async (request, userId) => {
     const applicationId = getRouteParam(request, 'applicationId');
@@ -103,16 +89,3 @@ export const requireInterviewOwnership = () =>
     return interview?.application.userId === userId;
   });
 
-export const requireResumeOwnership = () =>
-  requireResourceOwnership(async (request, userId) => {
-    const resumeId = getRouteParam(request, 'resumeId');
-    if (!resumeId) {
-      return false;
-    }
-
-    const resume = await prisma.resumeVersion.findFirst({
-      where: { id: resumeId, userId }
-    });
-
-    return Boolean(resume);
-  });
