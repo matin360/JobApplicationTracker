@@ -1,14 +1,10 @@
-import { PrismaClient } from '@prisma/client';
 import type { Prisma } from '@prisma/client';
-import type { Request, Response } from 'express';
-import type { AuthUser } from './auth';
+import type { Response } from 'express';
 import { serializeInterview, serializeNote, serializeReminder } from './children';
-
-interface AuthenticatedRequest extends Request {
-  user?: AuthUser;
-}
-
-const prisma = new PrismaClient();
+import { prisma } from './prisma';
+import type { AuthenticatedRequest } from './types';
+import { requireUser } from './types';
+import { readBodyString } from './validation';
 
 export const APPLICATION_STATUSES = ['saved', 'applied', 'interviewing', 'offer', 'rejected', 'withdrawn'] as const;
 export const APPLICATION_PRIORITIES = ['low', 'medium', 'high'] as const;
@@ -51,19 +47,8 @@ function validateApplicationBody(body: unknown, partial: boolean): { error: stri
   const input = (body ?? {}) as Record<string, unknown>;
   const fields: ValidatedFields = {};
 
-  const readString = (name: string): string | null | undefined => {
-    if (!(name in input)) {
-      return undefined;
-    }
-    const value = input[name];
-    if (value === null || value === '') {
-      return null;
-    }
-    return typeof value === 'string' ? value.trim() : undefined;
-  };
-
   if ('roleTitle' in input) {
-    const roleTitle = readString('roleTitle');
+    const roleTitle = readBodyString(input, 'roleTitle');
     if (!roleTitle) {
       return { error: 'Role title is required.' };
     }
@@ -76,7 +61,7 @@ function validateApplicationBody(body: unknown, partial: boolean): { error: stri
   }
 
   if ('company' in input) {
-    const company = readString('company');
+    const company = readBodyString(input, 'company');
     if (company === undefined) {
       return { error: 'Company must be a string.' };
     }
@@ -88,7 +73,7 @@ function validateApplicationBody(body: unknown, partial: boolean): { error: stri
 
   for (const name of ['location', 'source'] as const) {
     if (name in input) {
-      const value = readString(name);
+      const value = readBodyString(input, name);
       if (value === undefined) {
         return { error: `${name === 'location' ? 'Location' : 'Source'} must be a string.` };
       }
@@ -97,7 +82,7 @@ function validateApplicationBody(body: unknown, partial: boolean): { error: stri
   }
 
   if ('status' in input) {
-    const status = readString('status');
+    const status = readBodyString(input, 'status');
     if (!status || !APPLICATION_STATUSES.includes(status as (typeof APPLICATION_STATUSES)[number])) {
       return { error: `Status must be one of: ${APPLICATION_STATUSES.join(', ')}.` };
     }
@@ -105,7 +90,7 @@ function validateApplicationBody(body: unknown, partial: boolean): { error: stri
   }
 
   if ('priority' in input) {
-    const priority = readString('priority');
+    const priority = readBodyString(input, 'priority');
     if (priority === null) {
       fields.priority = null;
     } else if (!priority || !APPLICATION_PRIORITIES.includes(priority as (typeof APPLICATION_PRIORITIES)[number])) {
@@ -116,7 +101,7 @@ function validateApplicationBody(body: unknown, partial: boolean): { error: stri
   }
 
   if ('jobUrl' in input) {
-    const jobUrl = readString('jobUrl');
+    const jobUrl = readBodyString(input, 'jobUrl');
     if (jobUrl === undefined) {
       return { error: 'Job URL must be a string.' };
     }
@@ -135,7 +120,7 @@ function validateApplicationBody(body: unknown, partial: boolean): { error: stri
 
   for (const name of ['appliedAt', 'nextFollowUpAt'] as const) {
     if (name in input) {
-      const value = readString(name);
+      const value = readBodyString(input, name);
       if (value === null) {
         fields[name] = null;
       } else if (value === undefined) {
@@ -170,7 +155,7 @@ async function resolveCompanyId(userId: string, companyName: string | null): Pro
 
 export async function listApplications(request: AuthenticatedRequest, response: Response): Promise<void> {
   const applications = await prisma.application.findMany({
-    where: { userId: request.user!.id },
+    where: { userId: requireUser(request).id },
     include: { company: true },
     orderBy: { createdAt: 'desc' }
   });
@@ -186,11 +171,11 @@ export async function createApplication(request: AuthenticatedRequest, response:
   }
 
   const { companyName, ...fields } = result.fields;
-  const companyId = companyName !== undefined ? await resolveCompanyId(request.user!.id, companyName) : null;
+  const companyId = companyName !== undefined ? await resolveCompanyId(requireUser(request).id, companyName) : null;
 
   const application = await prisma.application.create({
     data: {
-      userId: request.user!.id,
+      userId: requireUser(request).id,
       companyId,
       roleTitle: fields.roleTitle!,
       location: fields.location ?? null,
@@ -245,7 +230,7 @@ export async function updateApplication(request: AuthenticatedRequest, response:
   const data: Prisma.ApplicationUncheckedUpdateInput = { ...fields };
 
   if (companyName !== undefined) {
-    data.companyId = await resolveCompanyId(request.user!.id, companyName);
+    data.companyId = await resolveCompanyId(requireUser(request).id, companyName);
   }
 
   const application = await prisma.application.update({

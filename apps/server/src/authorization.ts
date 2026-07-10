@@ -1,12 +1,6 @@
-import { PrismaClient } from '@prisma/client';
-import type { NextFunction, Request, Response } from 'express';
-import type { AuthUser } from './auth';
-
-interface AuthenticatedRequest extends Request {
-  user?: AuthUser;
-}
-
-const prisma = new PrismaClient();
+import type { NextFunction, Response } from 'express';
+import { prisma } from './prisma';
+import type { AuthenticatedRequest } from './types';
 
 function getRouteParam(request: AuthenticatedRequest, name: string): string | null {
   const value = request.params[name];

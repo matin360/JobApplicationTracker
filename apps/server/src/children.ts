@@ -1,8 +1,7 @@
-import { PrismaClient } from '@prisma/client';
 import type { Note, Reminder, Interview } from '@prisma/client';
 import type { Request, Response } from 'express';
-
-const prisma = new PrismaClient();
+import { prisma } from './prisma';
+import { readBodyString } from './validation';
 
 // Child records of an application: notes, reminders, and interviews.
 // Route-level ownership middleware has already verified access, so handlers
@@ -46,17 +45,6 @@ const MAX_NOTE_LENGTH = 5000;
 const MAX_TITLE_LENGTH = 200;
 const MAX_STAGE_LENGTH = 100;
 
-function readOptionalString(input: Record<string, unknown>, name: string): string | null | undefined {
-  if (!(name in input)) {
-    return undefined;
-  }
-  const value = input[name];
-  if (value === null || value === '') {
-    return null;
-  }
-  return typeof value === 'string' ? value.trim() : undefined;
-}
-
 function parseDate(value: string): Date | null {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
@@ -65,7 +53,7 @@ function parseDate(value: string): Date | null {
 // ---------- Notes ----------
 
 function validateNoteContent(input: Record<string, unknown>): { error: string } | { content: string } {
-  const content = readOptionalString(input, 'content');
+  const content = readBodyString(input, 'content');
   if (!content) {
     return { error: 'Note content is required.' };
   }
@@ -120,7 +108,7 @@ function validateReminderBody(body: unknown, partial: boolean): { error: string 
   const fields: ReminderFields = {};
 
   if ('title' in input) {
-    const title = readOptionalString(input, 'title');
+    const title = readBodyString(input, 'title');
     if (!title) {
       return { error: 'Reminder title is required.' };
     }
@@ -133,7 +121,7 @@ function validateReminderBody(body: unknown, partial: boolean): { error: string 
   }
 
   if ('dueAt' in input) {
-    const raw = readOptionalString(input, 'dueAt');
+    const raw = readBodyString(input, 'dueAt');
     const dueAt = raw ? parseDate(raw) : null;
     if (!dueAt) {
       return { error: 'Reminder due date must be a valid date.' };
@@ -203,7 +191,7 @@ function validateInterviewBody(body: unknown, partial: boolean): { error: string
   const fields: InterviewFields = {};
 
   if ('stage' in input) {
-    const stage = readOptionalString(input, 'stage');
+    const stage = readBodyString(input, 'stage');
     if (!stage) {
       return { error: 'Interview stage is required.' };
     }
@@ -216,7 +204,7 @@ function validateInterviewBody(body: unknown, partial: boolean): { error: string
   }
 
   if ('scheduledAt' in input) {
-    const raw = readOptionalString(input, 'scheduledAt');
+    const raw = readBodyString(input, 'scheduledAt');
     if (raw === undefined) {
       return { error: 'Interview date must be a string.' };
     }
@@ -232,7 +220,7 @@ function validateInterviewBody(body: unknown, partial: boolean): { error: string
   }
 
   if ('notes' in input) {
-    const notes = readOptionalString(input, 'notes');
+    const notes = readBodyString(input, 'notes');
     if (notes === undefined) {
       return { error: 'Interview notes must be a string.' };
     }

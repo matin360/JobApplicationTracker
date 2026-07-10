@@ -1,13 +1,8 @@
-import { PrismaClient } from '@prisma/client';
-import type { Request, Response } from 'express';
-import type { AuthUser } from './auth';
+import type { Response } from 'express';
 import { APPLICATION_STATUSES } from './applications';
-
-interface AuthenticatedRequest extends Request {
-  user?: AuthUser;
-}
-
-const prisma = new PrismaClient();
+import { prisma } from './prisma';
+import type { AuthenticatedRequest } from './types';
+import { requireUser } from './types';
 
 // How far ahead "upcoming" reminders look.
 export const UPCOMING_REMINDER_DAYS = 7;
@@ -30,7 +25,7 @@ const UPCOMING_REMINDER_LIMIT = 5;
  * All data is scoped to the authenticated user. No conversion rates or trends yet.
  */
 export async function getDashboardSummary(request: AuthenticatedRequest, response: Response): Promise<void> {
-  const userId = request.user!.id;
+  const userId = requireUser(request).id;
   const now = new Date();
   const upcomingCutoff = new Date(now.getTime() + UPCOMING_REMINDER_DAYS * 24 * 60 * 60 * 1000);
 

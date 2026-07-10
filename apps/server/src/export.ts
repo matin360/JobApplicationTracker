@@ -1,14 +1,10 @@
-import { PrismaClient } from '@prisma/client';
 import type { Prisma } from '@prisma/client';
-import type { Request, Response } from 'express';
-import type { AuthUser } from './auth';
+import type { Response } from 'express';
 import { APPLICATION_STATUSES } from './applications';
-
-interface AuthenticatedRequest extends Request {
-  user?: AuthUser;
-}
-
-const prisma = new PrismaClient();
+import { prisma } from './prisma';
+import type { AuthenticatedRequest } from './types';
+import { requireUser } from './types';
+import { readQueryString } from './validation';
 
 /**
  * GET /api/applications/export — CSV export of the current user's applications.
@@ -49,11 +45,6 @@ function toDateOnly(value: Date | null): string {
   return value ? value.toISOString().slice(0, 10) : '';
 }
 
-function readQueryString(request: Request, name: string): string | undefined {
-  const value = request.query[name];
-  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
-}
-
 const CSV_HEADER = [
   'id',
   'company_name',
@@ -70,7 +61,7 @@ const CSV_HEADER = [
 ];
 
 export async function exportApplicationsCsv(request: AuthenticatedRequest, response: Response): Promise<void> {
-  const where: Prisma.ApplicationWhereInput = { userId: request.user!.id };
+  const where: Prisma.ApplicationWhereInput = { userId: requireUser(request).id };
 
   const statusParam = readQueryString(request, 'status');
   if (statusParam) {

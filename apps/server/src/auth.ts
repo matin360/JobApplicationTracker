@@ -1,15 +1,11 @@
 import { randomBytes, scrypt as scryptCallback, timingSafeEqual } from 'crypto';
 import { promisify } from 'util';
-import { PrismaClient } from '@prisma/client';
 import type { NextFunction, Request, Response } from 'express';
 import { config } from './config';
+import { prisma } from './prisma';
+import type { AuthenticatedRequest } from './types';
 
-interface AuthenticatedRequest extends Request {
-  user?: AuthUser;
-}
-
-// Prisma client for database access and crypto utilities for password hashing.
-const prisma = new PrismaClient();
+// Password hashing uses Node's built-in scrypt (no external dependency).
 const scrypt = promisify(scryptCallback);
 
 // Session lifetime and cookie configuration.
@@ -70,6 +66,8 @@ function createSessionToken(): string {
   return randomBytes(32).toString('hex');
 }
 
+// Minimal cookie-header parser — we only ever read our own session cookie,
+// so a full cookie library isn't warranted.
 function getCookieValue(request: Request, name: string): string | null {
   const cookieHeader = request.headers.cookie ?? '';
 
