@@ -4,21 +4,7 @@ import { Prisma } from '@prisma/client';
 import type { NextFunction, Request, Response } from 'express';
 
 import { asyncHandler, errorHandler } from '../src/middleware';
-
-function makeResponse() {
-  return {
-    statusCode: 200,
-    body: undefined as unknown,
-    headersSent: false,
-    status(code: number) {
-      this.statusCode = code;
-      return this;
-    },
-    json(payload: unknown) {
-      this.body = payload;
-    }
-  };
-}
+import { makeResponse } from './helpers';
 
 test('asyncHandler forwards rejections to next()', async () => {
   const boom = new Error('boom');
@@ -39,7 +25,7 @@ test('asyncHandler forwards rejections to next()', async () => {
 test('errorHandler answers 500 JSON for unexpected errors', () => {
   const response = makeResponse();
 
-  errorHandler(new Error('unexpected'), {} as Request, response as unknown as Response, (() => undefined) as NextFunction);
+  errorHandler(new Error('unexpected'), {} as Request, response, (() => undefined) as NextFunction);
 
   assert.equal(response.statusCode, 500);
   assert.deepEqual(response.body, { error: 'Internal server error' });
@@ -52,7 +38,7 @@ test('errorHandler maps Prisma P2025 (record not found) to 404', () => {
     clientVersion: 'test'
   });
 
-  errorHandler(notFound, {} as Request, response as unknown as Response, (() => undefined) as NextFunction);
+  errorHandler(notFound, {} as Request, response, (() => undefined) as NextFunction);
 
   assert.equal(response.statusCode, 404);
   assert.deepEqual(response.body, { error: 'Not found' });

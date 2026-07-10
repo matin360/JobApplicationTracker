@@ -1,7 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { PrismaClient } from '@prisma/client';
-import type { Request, Response } from 'express';
 
 import {
   createApplication,
@@ -11,52 +9,8 @@ import {
   updateApplication
 } from '../src/applications';
 import { requireApplicationOwnership } from '../src/authorization';
-import type { AuthUser } from '../src/auth';
-
-const prisma = new PrismaClient();
-
-interface FakeResponse extends Response {
-  statusCode: number;
-  body: unknown;
-  ended: boolean;
-}
-
-function makeResponse(): FakeResponse {
-  const response = {
-    statusCode: 200,
-    body: undefined as unknown,
-    ended: false,
-    status(code: number) {
-      this.statusCode = code;
-      return this;
-    },
-    json(payload: unknown) {
-      this.body = payload;
-    },
-    send() {
-      this.ended = true;
-    }
-  };
-  return response as unknown as FakeResponse;
-}
-
-function makeRequest(user: AuthUser, options: { body?: unknown; params?: Record<string, string> } = {}): Request {
-  return {
-    user,
-    body: options.body ?? {},
-    params: options.params ?? {}
-  } as unknown as Request;
-}
-
-async function createTestUser(label: string): Promise<AuthUser> {
-  const user = await prisma.user.create({
-    data: {
-      email: `applications-${label}-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`,
-      name: `Applications ${label}`
-    }
-  });
-  return { id: user.id, email: user.email, name: user.name };
-}
+import { prisma } from '../src/prisma';
+import { createTestUser, makeRequest, makeResponse } from './helpers';
 
 test('applications CRUD round trip persists and serializes correctly', async () => {
   const user = await createTestUser('crud');

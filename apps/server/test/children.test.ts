@@ -1,7 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { PrismaClient } from '@prisma/client';
-import type { Request, Response } from 'express';
 
 import {
   createInterview,
@@ -15,53 +13,16 @@ import {
 import { getApplication } from '../src/applications';
 import { requireNoteOwnership } from '../src/authorization';
 import type { AuthUser } from '../src/auth';
+import { prisma } from '../src/prisma';
+import { createTestUser, makeRequest, makeResponse } from './helpers';
 
-const prisma = new PrismaClient();
-
-interface FakeResponse extends Response {
-  statusCode: number;
-  body: unknown;
-  ended: boolean;
-}
-
-function makeResponse(): FakeResponse {
-  const response = {
-    statusCode: 200,
-    body: undefined as unknown,
-    ended: false,
-    status(code: number) {
-      this.statusCode = code;
-      return this;
-    },
-    json(payload: unknown) {
-      this.body = payload;
-    },
-    send() {
-      this.ended = true;
-    }
-  };
-  return response as unknown as FakeResponse;
-}
-
-function makeRequest(user: AuthUser, options: { body?: unknown; params?: Record<string, string> } = {}): Request {
-  return {
-    user,
-    body: options.body ?? {},
-    params: options.params ?? {}
-  } as unknown as Request;
-}
-
+// A user plus one application to hang child records off.
 async function createFixture(label: string): Promise<{ user: AuthUser; applicationId: string }> {
-  const user = await prisma.user.create({
-    data: {
-      email: `children-${label}-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`,
-      name: `Children ${label}`
-    }
-  });
+  const user = await createTestUser(label);
   const application = await prisma.application.create({
     data: { userId: user.id, roleTitle: `Role for ${label}` }
   });
-  return { user: { id: user.id, email: user.email, name: user.name }, applicationId: application.id };
+  return { user, applicationId: application.id };
 }
 
 test('notes CRUD: create, edit, delete, and validation', async () => {

@@ -1,32 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { PrismaClient } from '@prisma/client';
-import type { Request, Response } from 'express';
+import type { Request } from 'express';
 
 import { getDashboardSummary } from '../src/dashboard';
 import type { AuthUser } from '../src/auth';
-
-const prisma = new PrismaClient();
-
-interface FakeResponse extends Response {
-  statusCode: number;
-  body: unknown;
-}
-
-function makeResponse(): FakeResponse {
-  const response = {
-    statusCode: 200,
-    body: undefined as unknown,
-    status(code: number) {
-      this.statusCode = code;
-      return this;
-    },
-    json(payload: unknown) {
-      this.body = payload;
-    }
-  };
-  return response as unknown as FakeResponse;
-}
+import { prisma } from '../src/prisma';
+import { makeResponse } from './helpers';
 
 interface SummaryBody {
   statusCounts: Record<string, number>;
