@@ -1,0 +1,31 @@
+name: 🌱 Good first issue (maintainers)
+description: "Maintainers: define a small, well-scoped task for new contributors."
+labels: ["good first issue"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Task
+      description: What needs doing, in plain words. Link the relevant files.
+      placeholder: The applications list doesn't show priority. Add a Priority column using the existing PriorityBadge component.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Expected outcome
+      description: What "done" looks like — behavior, tests, and any acceptance notes.
+      placeholder: Priority appears as a badge column; a unit test covers it; npm run ci passes.
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of work
+      options:
+        - Frontend (React/CSS)
+        - Backend (Express/Prisma)
+        - Tests
+        - Documentation
+    validations:
+      required: true

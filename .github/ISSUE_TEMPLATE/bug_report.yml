@@ -1,0 +1,45 @@
+name: 🐛 Bug report
+description: Something isn't working the way it should.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What went wrong? A clear, concise summary.
+      placeholder: Completing a reminder from the dashboard doesn't update the active count.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The exact steps that trigger the bug.
+      placeholder: |
+        1. Sign in and open /dashboard
+        2. Click "Complete" on an upcoming reminder
+        3. Look at the "active reminders in total" line
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: The active count decreases by one.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened? Include error messages, screenshots, or console/server logs if you have them.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, browser, Node version, and how you run the app (setup script / Docker).
+      placeholder: macOS 15, Chrome 149, Node 22, docker compose up
+    validations:
+      required: false
