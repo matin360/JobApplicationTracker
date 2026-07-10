@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { APPLICATION_STATUSES, listApplications } from '../applications';
-import type { ApplicationRecord } from '../applications';
+import { APPLICATION_STATUSES, downloadApplicationsCsv, listApplications } from '../applications';
+import type { ApplicationRecord, ApplicationStatus } from '../applications';
 import StatusBadge from '../components/applications/StatusBadge';
 import { formatDate } from '../components/applications/format';
 import Button from '../components/ui/Button';
@@ -58,7 +58,24 @@ const ApplicationsPage = () => {
   const [appliedFrom, setAppliedFrom] = useState('');
   const [appliedTo, setAppliedTo] = useState('');
   const [sort, setSort] = useState<TableSort | undefined>(undefined);
+  const [exporting, setExporting] = useState(false);
   const navigate = useNavigate();
+
+  const handleExport = async () => {
+    setExporting(true);
+    setError('');
+    try {
+      await downloadApplicationsCsv({
+        statuses: statusFilter === 'all' ? undefined : [statusFilter as ApplicationStatus],
+        from: appliedFrom || undefined,
+        to: appliedTo || undefined
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Export failed.');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -138,7 +155,12 @@ const ApplicationsPage = () => {
           <h1 className="page-title">Applications</h1>
           <p className="page-subtitle">Track every application in one place.</p>
         </div>
-        <Button onClick={() => { void navigate('/applications/new'); }}>New application</Button>
+        <div className="form-actions">
+          <Button variant="secondary" onClick={() => { void handleExport(); }} disabled={exporting}>
+            {exporting ? 'Exporting…' : 'Export CSV'}
+          </Button>
+          <Button onClick={() => { void navigate('/applications/new'); }}>New application</Button>
+        </div>
       </div>
 
       <div className="filter-bar">

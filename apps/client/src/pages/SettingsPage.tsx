@@ -28,10 +28,6 @@ const SettingsPage = () => {
             </div>
           </Form>
         </Card>
-
-        <Card title="Data export">
-          <p className="page-subtitle">Download your applications as CSV. Coming soon.</p>
-        </Card>
       </div>
     </>
   );

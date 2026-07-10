@@ -15,6 +15,7 @@ vi.mock('../src/applications', async (importOriginal) => ({
   createApplication: vi.fn(),
   updateApplication: vi.fn(),
   deleteApplication: vi.fn(),
+  downloadApplicationsCsv: vi.fn(),
   createNote: vi.fn(),
   updateNote: vi.fn(),
   deleteNote: vi.fn(),
@@ -32,6 +33,7 @@ const mocked = applications as unknown as Record<
   | 'createApplication'
   | 'updateApplication'
   | 'deleteApplication'
+  | 'downloadApplicationsCsv'
   | 'createNote'
   | 'updateNote'
   | 'deleteNote'
@@ -111,6 +113,56 @@ describe('ApplicationsPage', () => {
 
     expect(screen.getByRole('cell', { name: 'Designer' })).toBeInTheDocument();
     expect(screen.queryByRole('cell', { name: 'Frontend Engineer' })).not.toBeInTheDocument();
+  });
+
+  it('exports a CSV using the current filters', async () => {
+    let resolveExport!: () => void;
+
+    type ExportFn = () => Promise<void>;
+
+    const exportMock = mocked.downloadApplicationsCsv as ReturnType<typeof vi.fn> & {
+      mockImplementation(fn: ExportFn): void;
+    };
+
+    exportMock.mockImplementation(() => {
+      return new Promise<void>((resolve) => {
+        resolveExport = resolve;
+      });
+    });
+
+    renderList();
+    await screen.findByRole('cell', { name: 'Acme' });
+
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'offer' } });
+    fireEvent.change(screen.getByLabelText('Applied from'), { target: { value: '2026-06-01' } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Export CSV' }));
+
+    await waitFor(() =>
+      expect(mocked.downloadApplicationsCsv).toHaveBeenCalledWith({
+        statuses: ['offer'],
+        from: '2026-06-01',
+        to: undefined
+      })
+    );
+
+    // Loading state while the download is in flight.
+    const busyButton = screen.getByRole('button', { name: 'Exporting…' });
+    expect(busyButton).toBeDisabled();
+
+    resolveExport();
+    expect(await screen.findByRole('button', { name: 'Export CSV' })).toBeEnabled();
+  });
+
+  it('shows an error when the export fails', async () => {
+    mocked.downloadApplicationsCsv.mockRejectedValue(new Error('Export failed. (500 Internal Server Error)'));
+
+    renderList();
+    await screen.findByRole('cell', { name: 'Acme' });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Export CSV' }));
+
+    expect(await screen.findByText('Export failed. (500 Internal Server Error)')).toBeInTheDocument();
   });
 
   it('sorts by role when the header is clicked', async () => {

@@ -74,6 +74,14 @@ The dashboard (`/dashboard`) is powered by a single endpoint, `GET /api/dashboar
 
 The applications list supports search (company/role), a status filter, and an applied-date range filter; all combine and apply instantly client-side.
 
+## Exporting your data
+
+The applications list has an **Export CSV** button that downloads everything as `applications-YYYY-MM-DD.csv`. Only your own applications are ever exported, and the export honors the list's active status and applied-date filters.
+
+Columns, in order: `id`, `company_name`, `role_title`, `location`, `source`, `status`, `applied_at` (YYYY-MM-DD), `job_url`, `priority`, `next_follow_up_at` (YYYY-MM-DD), `notes_count`, `created_at` (ISO 8601). Empty fields are blank; text containing commas, quotes, or newlines is quoted per RFC 4180, so the file opens cleanly in Excel or Google Sheets.
+
+The endpoint is `GET /api/applications/export` with optional query filters, e.g. `?status=applied,interviewing&from=2026-01-01&to=2026-06-30` (dates filter on the applied date; rows without one are excluded when a date filter is set). Unknown statuses or malformed dates return `400`. The full schema is documented in `apps/server/src/export.ts`.
+
 ## Auth flow
 
 The app uses cookie-based sessions for authentication.
@@ -131,6 +139,7 @@ The e2e suite (`e2e/`, [Playwright](https://playwright.dev/)) drives the real st
 - **Applications CRUD**: the full create → list → detail → edit → delete round trip, form validation, search/status filters, column sorting, and ownership isolation (one user's applications are invisible to another).
 - **Detail workspace**: notes (add/edit/delete), reminders (add/complete/reopen/delete with overdue badges), interviews (add/edit with stage and date), the activity timeline, and ownership checks on all child records.
 - **Dashboard**: status counts, the chart, upcoming reminders (including completing one in place), recent applications with links, empty states, and the applied-date range filter on the list.
+- **CSV export**: real browser downloads with the dated filename, RFC 4180 escaping of special characters, filter-aware exports, the header-only empty case, and the 401 for unauthenticated requests.
 
 One-time setup for the browser binary:
 

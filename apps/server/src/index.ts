@@ -10,6 +10,7 @@ import {
   updateApplication
 } from './applications';
 import { getDashboardSummary } from './dashboard';
+import { exportApplicationsCsv } from './export';
 import {
   createInterview,
   createNote,
@@ -37,6 +38,8 @@ const corsOptions = {
   credentials: true,
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept', 'X-Requested-With'],
+  // Let cross-origin clients read the CSV export filename.
+  exposedHeaders: ['Content-Disposition'],
   preflightContinue: false,
   optionsSuccessStatus: 204
 };
@@ -78,6 +81,9 @@ app.delete('/api/companies/:companyId', requireAuth, requireCompanyOwnership(), 
 });
 
 app.get('/api/applications', requireAuth, listApplications);
+
+// Must be registered before /api/applications/:applicationId so "export" is not read as an id.
+app.get('/api/applications/export', requireAuth, exportApplicationsCsv);
 
 app.post('/api/applications', requireAuth, createApplication);
 
