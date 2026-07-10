@@ -333,6 +333,33 @@ ul {
   color: #172033;
 }
 
+/* ---------- Auth page ---------- */
+
+.auth-page {
+  padding: 2rem 1rem;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.auth-card {
+  background: #fff;
+  border: 1px solid #dde3ee;
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.auth-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.auth-toggle .ui-button {
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+}
+
 /* ---------- Page helpers ---------- */
 
 .page-header {
@@ -374,6 +401,15 @@ ul {
 .content-grid {
   display: grid;
   gap: 1rem;
+}
+
+/* Vertical rhythm helpers for content below the fold. */
+.page-section {
+  margin-top: 1rem;
+}
+
+.page-section--tight {
+  margin-top: 0.75rem;
 }
 
 .filter-bar {

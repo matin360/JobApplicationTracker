@@ -113,7 +113,7 @@ const DashboardPage = () => {
               ))}
             </ul>
           )}
-          <p className="page-subtitle" style={{ marginTop: '0.75rem' }}>
+          <p className="page-subtitle page-section--tight">
             {summary.reminders.active} active reminder{summary.reminders.active === 1 ? '' : 's'} in total.
           </p>
         </Card>
@@ -123,7 +123,7 @@ const DashboardPage = () => {
         </Card>
       </div>
 
-      <div style={{ marginTop: '1rem' }}>
+      <div className="page-section">
         <Card title="Recent applications">
           {summary.recentApplications.length === 0 ? (
             <p className="page-subtitle">

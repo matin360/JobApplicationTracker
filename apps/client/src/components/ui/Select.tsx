@@ -5,6 +5,7 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
 }
 
+/** Labelled native select, styled like Input; options are passed as children. */
 const Select = ({ label, id, className, children, ...rest }: SelectProps) => {
   const autoId = useId();
   const selectId = id ?? autoId;

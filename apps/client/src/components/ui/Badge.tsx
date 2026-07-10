@@ -7,6 +7,7 @@ interface BadgeProps {
   children: ReactNode;
 }
 
+/** Small status pill; `tone` selects the color pair (neutral/info/success/warning/danger). */
 const Badge = ({ tone = 'neutral', children }: BadgeProps) => (
   <span className={`ui-badge ui-badge--${tone}`}>{children}</span>
 );

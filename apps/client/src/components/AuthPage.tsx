@@ -1,56 +1,40 @@
 import { useState } from 'react';
 import AuthForm from './AuthForm';
+import Button from './ui/Button';
 
+// The public /login page: a card with a login/signup mode toggle.
 const AuthPage = () => {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
 
   return (
-    <main style={{ fontFamily: 'Inter, sans-serif', padding: '2rem', maxWidth: '480px', margin: '0 auto' }}>
-      <div style={{ border: '1px solid #dde3ee', borderRadius: '16px', padding: '1.5rem', background: '#fff' }}>
-        <h1 style={{ marginBottom: '0.5rem' }}>{mode === 'login' ? 'Sign in' : 'Create account'}</h1>
-        <p style={{ color: '#5d6470', marginBottom: '1rem' }}>
+    <main className="auth-page">
+      <div className="auth-card">
+        <h1>{mode === 'login' ? 'Sign in' : 'Create account'}</h1>
+        <p className="page-subtitle">
           {mode === 'login'
             ? 'Access your tracker with your email and password.'
             : 'Create a new account to start organizing your applications.'}
         </p>
 
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-          <button
-            type="button"
+        <div className="auth-toggle">
+          <Button
+            variant={mode === 'login' ? 'primary' : 'secondary'}
             onClick={() => setMode('login')}
-            style={{ ...toggleStyle, ...(mode === 'login' ? activeToggleStyle : {}) }}
           >
             Login
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant={mode === 'signup' ? 'primary' : 'secondary'}
             onClick={() => setMode('signup')}
-            style={{ ...toggleStyle, ...(mode === 'signup' ? activeToggleStyle : {}) }}
           >
             Sign up
-          </button>
+          </Button>
         </div>
 
         <AuthForm mode={mode} />
       </div>
     </main>
   );
-};
-
-const toggleStyle: React.CSSProperties = {
-  borderWidth: '1px',
-  borderStyle: 'solid',
-  borderColor: '#ccd4e0',
-  borderRadius: '999px',
-  padding: '0.45rem 0.8rem',
-  background: '#fff',
-  color: '#172033'
-};
-
-const activeToggleStyle: React.CSSProperties = {
-  background: '#172033',
-  color: '#fff',
-  borderColor: '#172033'
 };
 
 export default AuthPage;

@@ -1,7 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import AuthProvider from './components/AuthProvider';
 import Layout from './components/layout/Layout';
-import LoginPage from './components/LoginPage';
+import AuthPage from './components/AuthPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import ApplicationDetailPage from './pages/ApplicationDetailPage';
 import ApplicationsPage from './pages/ApplicationsPage';
@@ -13,7 +13,7 @@ import SettingsPage from './pages/SettingsPage';
 // Exported separately so tests can mount the routes inside a MemoryRouter.
 export const AppRoutes = () => (
   <Routes>
-    <Route path="/login" element={<LoginPage />} />
+    <Route path="/login" element={<AuthPage />} />
 
     <Route
       element={

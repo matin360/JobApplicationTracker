@@ -6,6 +6,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   hint?: string;
 }
 
+/** Labelled input; the label is wired via htmlFor and an optional hint via aria-describedby. */
 const Input = ({ label, hint, id, className, ...rest }: InputProps) => {
   const autoId = useId();
   const inputId = id ?? autoId;

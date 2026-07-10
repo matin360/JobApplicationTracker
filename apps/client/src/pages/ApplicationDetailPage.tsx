@@ -5,9 +5,9 @@ import ActivityTimeline from '../components/applications/ActivityTimeline';
 import InterviewsSection from '../components/applications/InterviewsSection';
 import NotesSection from '../components/applications/NotesSection';
 import RemindersSection from '../components/applications/RemindersSection';
+import PriorityBadge from '../components/applications/PriorityBadge';
 import StatusBadge from '../components/applications/StatusBadge';
 import { formatDate } from '../components/applications/format';
-import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import { useApplication } from '../hooks/useApplication';
@@ -99,7 +99,7 @@ const ApplicationDetailPage = () => {
           </div>
           <div>
             <dt>Priority</dt>
-            <dd>{application.priority ? <Badge tone={application.priority === 'high' ? 'danger' : application.priority === 'low' ? 'neutral' : 'info'}>{application.priority}</Badge> : '—'}</dd>
+            <dd>{application.priority ? <PriorityBadge priority={application.priority} /> : '—'}</dd>
           </div>
           <div>
             <dt>Applied on</dt>
@@ -143,7 +143,7 @@ const ApplicationDetailPage = () => {
         <ActivityTimeline application={application} />
       </div>
 
-      <p style={{ marginTop: '1rem' }}>
+      <p className="page-section">
         <Link to="/applications">← Back to applications</Link>
       </p>
     </>

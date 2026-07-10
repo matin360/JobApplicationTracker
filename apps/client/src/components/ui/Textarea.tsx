@@ -5,6 +5,7 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
 }
 
+/** Labelled textarea with the shared field styling; resizes vertically only. */
 const Textarea = ({ label, id, className, ...rest }: TextareaProps) => {
   const autoId = useId();
   const textareaId = id ?? autoId;

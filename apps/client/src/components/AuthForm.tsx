@@ -1,6 +1,10 @@
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import type { AuthResponse } from '../auth';
 import { signIn, signUp } from '../auth';
+import Button from './ui/Button';
+import Form from './ui/Form';
+import Input from './ui/Input';
 
 interface AuthFormProps {
   mode: 'login' | 'signup';
@@ -31,6 +35,8 @@ const AuthForm = ({ mode, onSuccess }: AuthFormProps) => {
         : await signUp(payload);
 
       onSuccess?.(response.user);
+      // Full page load on purpose: it re-runs AuthProvider so every consumer
+      // picks up the fresh session. Don't "fix" this to navigate().
       window.location.assign('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.');
@@ -41,91 +47,46 @@ const AuthForm = ({ mode, onSuccess }: AuthFormProps) => {
 
   const isValidEmail = /[^\s@]+@[^\s@]+\.[^\s@]+/.test(email);
   const isValidPassword = password.length >= 8;
+  const canSubmit = !loading && isValidEmail && isValidPassword;
 
   return (
-    <form onSubmit={(event) => { void handleSubmit(event); }} style={{ display: 'grid', gap: '0.9rem' }}>
+    <Form onSubmit={(event) => { void handleSubmit(event); }}>
       {mode === 'signup' && (
-        <label style={{ display: 'grid', gap: '0.35rem', fontSize: '0.95rem' }}>
-          <span>Name</span>
-          <input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Jane Doe"
-            style={inputStyle}
-          />
-        </label>
+        <Input
+          label="Name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          placeholder="Jane Doe"
+        />
       )}
 
-      <label style={{ display: 'grid', gap: '0.35rem', fontSize: '0.95rem' }}>
-        <span>Email</span>
-        <input
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="you@example.com"
-          style={inputStyle}
-          required
-        />
-        {!email || isValidEmail ? null : <span style={hintStyle}>Please enter a valid email address.</span>}
-      </label>
+      <Input
+        label="Email"
+        type="email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        placeholder="you@example.com"
+        required
+        hint={!email || isValidEmail ? undefined : 'Please enter a valid email address.'}
+      />
 
-      <label style={{ display: 'grid', gap: '0.35rem', fontSize: '0.95rem' }}>
-        <span>Password</span>
-        <input
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          placeholder="At least 8 characters"
-          style={inputStyle}
-          required
-        />
-        {!password || isValidPassword ? null : <span style={hintStyle}>Password must be at least 8 characters.</span>}
-      </label>
+      <Input
+        label="Password"
+        type="password"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        placeholder="At least 8 characters"
+        required
+        hint={!password || isValidPassword ? undefined : 'Password must be at least 8 characters.'}
+      />
 
-      {error ? <p style={errorStyle}>{error}</p> : null}
+      {error ? <p className="form-error">{error}</p> : null}
 
-      <button
-        type="submit"
-        disabled={loading || !isValidEmail || !isValidPassword}
-        style={{
-          ...buttonStyle,
-          opacity: loading || !isValidEmail || !isValidPassword ? 0.7 : 1,
-          cursor: loading || !isValidEmail || !isValidPassword ? 'not-allowed' : 'pointer'
-        }}
-      >
+      <Button type="submit" disabled={!canSubmit}>
         {loading ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
-      </button>
-    </form>
+      </Button>
+    </Form>
   );
-};
-
-const inputStyle: React.CSSProperties = {
-  border: '1px solid #ccd4e0',
-  borderRadius: '10px',
-  padding: '0.75rem 0.85rem',
-  fontSize: '0.95rem'
-};
-
-const buttonStyle: React.CSSProperties = {
-  border: 'none',
-  borderRadius: '10px',
-  padding: '0.8rem 1rem',
-  background: '#172033',
-  color: '#fff',
-  fontWeight: 600
-};
-
-const hintStyle: React.CSSProperties = {
-  fontSize: '0.8rem',
-  color: '#6a7488'
-};
-
-const errorStyle: React.CSSProperties = {
-  padding: '0.7rem 0.8rem',
-  borderRadius: '10px',
-  background: '#fde8e8',
-  color: '#8c1d1d',
-  fontSize: '0.9rem'
 };
 
 export default AuthForm;

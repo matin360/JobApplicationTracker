@@ -21,6 +21,11 @@ interface TableProps<Row> {
   onSortChange?: (key: string) => void;
 }
 
+/**
+ * Generic table. Columns marked `sortable` render header buttons when
+ * `onSortChange` is provided; the active column exposes aria-sort. Rows render
+ * inside a horizontally scrollable wrapper so wide tables never break layout.
+ */
 const Table = <Row,>({ columns, rows, rowKey, emptyMessage = 'Nothing here yet.', sort, onSortChange }: TableProps<Row>) => (
   <div className="ui-table-wrap">
     {rows.length === 0 ? (
